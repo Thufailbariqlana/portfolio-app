@@ -38,13 +38,14 @@ const staticOrigins = (process.env.CORS_ORIGINS || '')
   .map(o => o.trim())
   .filter(Boolean);
 
+// Regex yang lebih aman untuk mendukung semua subdomain .vercel.app dan .netlify.app
 const dynamicPatterns = [
-  /^https:\/\/[a-z0-9\-]+\.vercel\.app$/,
-  /^https:\/\/[a-z0-9\-]+\.netlify\.app$/
+  /^https:\/\/.*\.vercel\.app$/,
+  /^https:\/\/.*\.netlify\.app$/
 ];
 
 function isAllowedOrigin(origin) {
-  if (!origin) return true;
+  if (!origin) return true; // allow Postman/server-to-server
   if (staticOrigins.includes('*') || staticOrigins.includes(origin)) return true;
   return dynamicPatterns.some(re => re.test(origin));
 }
@@ -60,7 +61,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.options('*', cors());
+// Tangani eksplisit request OPTIONS (Preflight) untuk semua route Express
+app.options(/(.*)/, cors());
 
 // ── General Middleware ────────────────────────────────────────────────────────
 app.use(compression());
