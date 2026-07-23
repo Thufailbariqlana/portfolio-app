@@ -32,7 +32,7 @@ const PortfolioConfig = (() => {
     hostname.startsWith('192.168.') // local network
   );
 
-  const API_BASE = isLocal ? LOCAL_API : PROD_API;
+  const API_BASE_URL = 'https://portfolio-app-khaki-mu.vercel.app/api';
 
   return {
     API:  `${API_BASE}/api`,   // e.g. https://…/api

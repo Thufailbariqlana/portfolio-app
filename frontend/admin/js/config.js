@@ -23,7 +23,7 @@ const AdminConfig = (() => {
     hostname.startsWith('192.168.')
   );
 
-  const API_BASE = isLocal ? LOCAL_API : PROD_API;
+  const API_BASE_URL = 'https://portfolio-app-khaki-mu.vercel.app/api';
 
   return {
     API:      `${API_BASE}/api`,
