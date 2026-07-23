@@ -32,37 +32,16 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-// ── Dynamic CORS ──────────────────────────────────────────────────────────────
-const staticOrigins = (process.env.CORS_ORIGINS || '')
-  .split(',')
-  .map(o => o.trim())
-  .filter(Boolean);
-
-// Regex yang lebih aman untuk mendukung semua subdomain .vercel.app dan .netlify.app
-const dynamicPatterns = [
-  /^https:\/\/.*\.vercel\.app$/,
-  /^https:\/\/.*\.netlify\.app$/
-];
-
-function isAllowedOrigin(origin) {
-  if (!origin) return true; // allow Postman/server-to-server
-  if (staticOrigins.includes('*') || staticOrigins.includes(origin)) return true;
-  return dynamicPatterns.some(re => re.test(origin));
-}
-
-app.use(cors({
-  origin: (origin, cb) => {
-    if (isAllowedOrigin(origin)) return cb(null, true);
-    console.warn(`[CORS] Blocked origin: ${origin}`);
-    cb(new Error(`CORS: origin "${origin}" not allowed`));
-  },
+// ── Simple & Safe CORS for Vercel Serverless ─────────────────────────────────
+const corsOptions = {
+  origin: true, // Dinamis mengizinkan origin mana pun yang memanggil
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-CSRF-Token']
+};
 
-// Tangani eksplisit request OPTIONS (Preflight) untuk semua route Express
-app.options(/(.*)/, cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle semua preflight request
 
 // ── General Middleware ────────────────────────────────────────────────────────
 app.use(compression());
@@ -133,11 +112,8 @@ app.use((err, _req, res, _next) => {
 });
 
 // ── Mode Handling (Serverless Vercel vs Local) ────────────────────────────────
-if (process.env.VERCEL) {
-  // Lingkungan Vercel: Cukup test koneksi tanpa membuat server HTTP mandiri
-  testConnection().catch(err => console.error('Database connection error:', err));
-} else {
-  // Lingkungan Local Mode (Laptop Anda)
+if (!process.env.VERCEL) {
+  // Hanya jalankan app.listen & testConnection secara async jika di LOCAL
   (async () => {
     await testConnection();
     app.listen(PORT, '0.0.0.0', () => {
@@ -146,5 +122,5 @@ if (process.env.VERCEL) {
   })();
 }
 
-// WAJIB UNTUK VERCEL: Export app agar dapat dijalankan sebagai serverless function
+// Export app untuk Vercel Serverless Function
 module.exports = app;
