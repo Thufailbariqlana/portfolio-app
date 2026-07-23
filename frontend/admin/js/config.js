@@ -9,7 +9,7 @@
 const AdminConfig = (() => {
   // ── Your Render backend URL (no trailing slash) ──────────────
   // Example: 'https://portfolio-api-xxxx.onrender.com'
-  const PROD_API  = 'https://portfolio-app-khaki-mu.vercel.app/';
+  const PROD_API  = 'https://portfolio-app-khaki-mu.vercel.app';
 
   // ── Local development backend ─────────────────────────────────
   const LOCAL_API = 'http://localhost:5000';
@@ -23,7 +23,7 @@ const AdminConfig = (() => {
     hostname.startsWith('192.168.')
   );
 
-  const API_BASE_URL = 'https://portfolio-app-khaki-mu.vercel.app/api';
+  const API_BASE_URL = isLocal ? LOCAL_API : PROD_API;
 
   return {
     API:      `${API_BASE}/api`,
