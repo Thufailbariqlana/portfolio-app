@@ -22,14 +22,11 @@ async function login(req, res) {
       return res.status(400).json({ success: false, message: 'Username and password are required.' });
     }
 
-    // 1. Ambil data dari query
-    const result = await query(
+    // Ambil baris user langsung dari helper query
+    const rows = await query(
       'SELECT id, username, email, password_hash, role FROM users WHERE username = ? LIMIT 1',
       [username.trim()]
     );
-
-    // Menangani baik result berformat [rows, fields] (mysql2) maupun langsung rows
-    const rows = Array.isArray(result[0]) ? result[0] : result;
 
     if (!rows || rows.length === 0) {
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
@@ -37,14 +34,13 @@ async function login(req, res) {
 
     const user = rows[0];
 
-    // 2. Bandingkan password
+    // Bandingkan password
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
 
-    // 3. Buat JWT token & kirim response
     const token = signToken(user);
 
     return res.status(200).json({

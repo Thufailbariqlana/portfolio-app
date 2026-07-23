@@ -61,13 +61,13 @@ const pool = mysql.createPool({
 
 // ── Query helper ──────────────────────────────────────────────────────────────
 /**
- * Execute a parameterised query and return [rows, fields].
+ * Execute a parameterised query and return rows directly.
  * @param {string} sql
  * @param {Array}  params
  */
 async function query(sql, params = []) {
-  const [rows, fields] = await pool.execute(sql, params);
-  return [rows, fields];
+  const [rows] = await pool.execute(sql, params);
+  return rows; // <-- HANYA RETURN ROWS
 }
 
 // ── Connection test (called once on startup) ──────────────────────────────────
