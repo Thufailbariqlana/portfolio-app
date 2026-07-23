@@ -13,13 +13,20 @@ const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const ALLOWED_DOCS = ['application/pdf', ...ALLOWED_MIME];
 
 /**
- * Create a multer disk storage for a given sub-folder.
+ * Create a multer storage (MemoryStorage for Vercel, DiskStorage for Local).
  * @param {string} subfolder  e.g. 'photos', 'projects', 'certificates'
  */
 function makeStorage(subfolder) {
+  // Jika di Vercel Serverless, gunakan MemoryStorage (RAM sementara)
+  if (process.env.VERCEL) {
+    return multer.memoryStorage();
+  }
+
+  // Jika di lingkungan Local Development (Laptop)
   const dest = path.join(UPLOAD_BASE, subfolder);
-  // Ensure directory exists at startup
-  fs.mkdirSync(dest, { recursive: true });
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
+  }
 
   return multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, dest),
