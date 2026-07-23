@@ -24,39 +24,29 @@ const contactRoutes     = require('./routes/contactRoutes');
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
-// ── Trust proxy (required on Render, Railway, Heroku, etc.) ─────────────────
-// Render sits behind a reverse proxy; this lets express see the real client IP
-// and allows express-rate-limit to work correctly.
+// ── Trust proxy ───────────────────────────────────────────────────────────────
 app.set('trust proxy', 1);
 
 // ── Security Headers (Helmet) ─────────────────────────────────────────────────
 app.use(helmet({
-  // Allow images served from /uploads to be loaded by cross-origin frontends
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
 // ── Dynamic CORS ──────────────────────────────────────────────────────────────
-// CORS_ORIGINS in .env is a comma-separated list, e.g.:
-//   http://localhost:5500,https://my-portfolio.vercel.app,https://my-admin.vercel.app
-//
-// In addition we ALWAYS allow *.vercel.app and *.netlify.app preview deployments
-// so you don't have to update the env var for every Vercel preview branch.
-
 const staticOrigins = (process.env.CORS_ORIGINS || '')
   .split(',')
   .map(o => o.trim())
   .filter(Boolean);
 
-// Dynamic-pattern matchers for cloud preview URLs
 const dynamicPatterns = [
   /^https:\/\/[a-z0-9\-]+\.vercel\.app$/,
   /^https:\/\/[a-z0-9\-]+\.netlify\.app$/
 ];
 
 function isAllowedOrigin(origin) {
-  if (!origin) return true;                           // allow non-browser clients
-  if (staticOrigins.includes(origin)) return true;   // exact match
-  return dynamicPatterns.some(re => re.test(origin)); // wildcard patterns
+  if (!origin) return true;
+  if (staticOrigins.includes('*') || staticOrigins.includes(origin)) return true;
+  return dynamicPatterns.some(re => re.test(origin));
 }
 
 app.use(cors({
@@ -70,7 +60,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Respond to OPTIONS pre-flight immediately
 app.options('*', cors());
 
 // ── General Middleware ────────────────────────────────────────────────────────
@@ -79,9 +68,7 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ── Static: serve uploaded files ──────────────────────────────────────────────
-// On Render free tier the filesystem is ephemeral — uploaded files won't persist
-// across deploys/restarts. Consider using Cloudinary or S3 for persistent uploads.
+// ── Static Files ──────────────────────────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── Global Rate Limiter ───────────────────────────────────────────────────────
@@ -94,7 +81,6 @@ const globalLimiter = rateLimit({
 });
 app.use('/api/', globalLimiter);
 
-// Stricter limiter for auth (brute-force protection)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -114,6 +100,11 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Root endpoint test
+app.get('/', (_req, res) => {
+  res.json({ success: true, message: 'Portfolio API Backend is Running on Vercel Serverless!' });
+});
+
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth',         authRoutes);
 app.use('/api/profile',      profileRoutes);
@@ -130,7 +121,6 @@ app.use((_req, res) => {
 });
 
 // ── Global Error Handler ──────────────────────────────────────────────────────
-// eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
   console.error('[ERROR]', err.message || err);
   const statusCode = err.status || err.statusCode || 500;
@@ -140,13 +130,19 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-// ── Bootstrap ─────────────────────────────────────────────────────────────────
-(async () => {
-  await testConnection();
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n🚀  Portfolio API → http://0.0.0.0:${PORT}`);
-    console.log(`    ENV      : ${process.env.NODE_ENV || 'development'}`);
-    console.log(`    DB Host  : ${process.env.DB_HOST}`);
-    console.log(`    SSL      : ${process.env.DB_SSL === 'true' ? 'enabled ✅' : 'disabled'}\n`);
-  });
-})();
+// ── Mode Handling (Serverless Vercel vs Local) ────────────────────────────────
+if (process.env.VERCEL) {
+  // Lingkungan Vercel: Cukup test koneksi tanpa membuat server HTTP mandiri
+  testConnection().catch(err => console.error('Database connection error:', err));
+} else {
+  // Lingkungan Local Mode (Laptop Anda)
+  (async () => {
+    await testConnection();
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`\n🚀  Portfolio API → http://0.0.0.0:${PORT}`);
+    });
+  })();
+}
+
+// WAJIB UNTUK VERCEL: Export app agar dapat dijalankan sebagai serverless function
+module.exports = app;
