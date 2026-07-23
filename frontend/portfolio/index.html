@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" id="metaDesc" content="Professional portfolio website"/>
+  <meta property="og:title" id="ogTitle" content="Portfolio"/>
+  <meta property="og:description" id="ogDesc" content=""/>
+  <title id="pageTitle">Portfolio</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- ═══════════════════════ NAVBAR ═══════════════════════════ -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="#hero" class="nav-brand"><span id="navBrand">Dev</span>.portfolio</a>
+    <div class="nav-links">
+      <a href="#about"        data-nav="about">About</a>
+      <a href="#experience"   data-nav="experience">Experience</a>
+      <a href="#projects"     data-nav="projects">Projects</a>
+      <a href="#skills"       data-nav="skills">Skills</a>
+      <a href="#education"    data-nav="education">Education</a>
+      <a href="#certificates" data-nav="certificates">Certificates</a>
+      <a href="#contact"      data-nav="contact" class="nav-cta">Contact</a>
+    </div>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile nav -->
+<div class="mobile-nav" id="mobileNav">
+  <a href="#about"        onclick="closeMobileNav()">About</a>
+  <a href="#experience"   onclick="closeMobileNav()">Experience</a>
+  <a href="#projects"     onclick="closeMobileNav()">Projects</a>
+  <a href="#skills"       onclick="closeMobileNav()">Skills</a>
+  <a href="#education"    onclick="closeMobileNav()">Education</a>
+  <a href="#certificates" onclick="closeMobileNav()">Certificates</a>
+  <a href="#contact"      onclick="closeMobileNav()">Contact</a>
+</div>
+
+<!-- ═══════════════════════ HERO ═════════════════════════════ -->
+<section id="hero">
+  <div class="hero-bg">
+    <div class="hero-bg-circle c1"></div>
+    <div class="hero-bg-circle c2"></div>
+  </div>
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        <span id="heroBadge">Open to Work</span>
+      </div>
+      <h1 class="hero-name" id="heroName">
+        Hi, I'm <span class="accent" id="heroFirstName">Your Name</span>
+      </h1>
+      <p class="hero-title" id="heroTitle">Full-Stack Developer</p>
+      <p class="hero-bio" id="heroBio">Loading…</p>
+      <div class="hero-actions">
+        <a href="#projects" class="btn-primary">
+          View My Work
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <a href="#" id="cvDownloadBtn" class="btn-outline hidden" download>
+          Download CV
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </a>
+      </div>
+      <div class="hero-stats" id="heroStats">
+        <div>
+          <div class="hero-stat-val" id="heroYears">0+</div>
+          <div class="hero-stat-label">Years Experience</div>
+        </div>
+        <div>
+          <div class="hero-stat-val" id="heroProjectCount">0+</div>
+          <div class="hero-stat-label">Projects Built</div>
+        </div>
+        <div>
+          <div class="hero-stat-val" id="heroCertCount">0+</div>
+          <div class="hero-stat-label">Certifications</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-photo-wrap">
+      <div class="hero-photo-ring"></div>
+      <img id="heroPhoto" src="https://ui-avatars.com/api/?name=Dev&size=260&background=1e293b&color=3b82f6"
+           alt="Profile photo" class="hero-photo"/>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════ ABOUT ═══════════════════════════ -->
+<section id="about">
+  <div class="container fade-in">
+    <div class="section-title-line">
+      <h2 class="section-title">About Me</h2>
+    </div>
+    <p class="section-subtitle">A bit more about who I am</p>
+    <div class="about-grid">
+      <div>
+        <p id="aboutBio" style="color:#94a3b8;line-height:1.85;font-size:.95rem">Loading…</p>
+        <div class="about-links" id="aboutLinks"></div>
+      </div>
+      <div class="about-info-list" id="aboutInfoList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ EXPERIENCE ════════════════════════ -->
+<section id="experience" style="background:rgba(30,41,59,.4)">
+  <div class="container fade-in">
+    <div class="section-title-line">
+      <h2 class="section-title">Work Experience</h2>
+    </div>
+    <p class="section-subtitle">My professional journey</p>
+    <div id="experienceLoading" style="text-align:center;padding:3rem">
+      <div class="spinner-ring"></div>
+    </div>
+    <div class="timeline" id="experienceTimeline" style="display:none"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ PROJECTS ═════════════════════════ -->
+<section id="projects">
+  <div class="container fade-in">
+    <div class="section-title-line">
+      <h2 class="section-title">Projects</h2>
+    </div>
+    <p class="section-subtitle">Things I've built</p>
+    <div class="projects-filter" id="projectsFilter"></div>
+    <div id="projectsLoading" style="text-align:center;padding:3rem">
+      <div class="spinner-ring"></div>
+    </div>
+    <div class="projects-grid" id="projectsGrid" style="display:none"></div>
+    <p id="projectsEmpty" class="hidden" style="text-align:center;color:var(--muted);padding:2rem">No projects found.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════ SKILLS ══════════════════════════ -->
+<section id="skills" style="background:rgba(30,41,59,.4)">
+  <div class="container fade-in">
+    <div class="section-title-line">
+      <h2 class="section-title">Skills</h2>
+    </div>
+    <p class="section-subtitle">Technologies I work with</p>
+    <div id="skillsLoading" style="text-align:center;padding:3rem">
+      <div class="spinner-ring"></div>
+    </div>
+    <div id="skillsContainer" style="display:none"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ EDUCATION ═════════════════════════ -->
+<section id="education">
+  <div class="container fade-in">
+    <div class="section-title-line">
+      <h2 class="section-title">Education</h2>
+    </div>
+    <p class="section-subtitle">Academic background</p>
+    <div id="educationLoading" style="text-align:center;padding:3rem">
+      <div class="spinner-ring"></div>
+    </div>
+    <div class="edu-grid" id="educationGrid" style="display:none"></div>
+  </div>
+</section>
+
+<!-- ═════════════════════ CERTIFICATES ═══════════════════════ -->
+<section id="certificates" style="background:rgba(30,41,59,.4)">
+  <div class="container fade-in">
+    <div class="section-title-line">
+      <h2 class="section-title">Certificates</h2>
+    </div>
+    <p class="section-subtitle">Professional certifications</p>
+    <div id="certsLoading" style="text-align:center;padding:3rem">
+      <div class="spinner-ring"></div>
+    </div>
+    <div class="certs-grid" id="certsGrid" style="display:none"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ CONTACT ══════════════════════════ -->
+<section id="contact">
+  <div class="container fade-in">
+    <div class="section-title-line">
+      <h2 class="section-title">Get In Touch</h2>
+    </div>
+    <p class="section-subtitle">Have a project in mind? Let's talk.</p>
+    <div class="contact-grid">
+      <div>
+        <div class="contact-info-list" id="contactInfoList"></div>
+        <div class="social-links" id="socialLinks"></div>
+      </div>
+      <div class="contact-form-card">
+        <div id="contactFormSuccess" class="form-success hidden">
+          ✓ Message sent! I'll get back to you soon.
+        </div>
+        <form id="contactForm" novalidate>
+          <div class="form-group">
+            <label for="senderName">Full Name *</label>
+            <input type="text" id="senderName" placeholder="John Doe" required/>
+            <span class="form-error hidden" id="errName">Name is required.</span>
+          </div>
+          <div class="form-group">
+            <label for="senderEmail">Email Address *</label>
+            <input type="email" id="senderEmail" placeholder="john@example.com" required/>
+            <span class="form-error hidden" id="errEmail">Valid email is required.</span>
+          </div>
+          <div class="form-group">
+            <label for="msgSubject">Subject</label>
+            <input type="text" id="msgSubject" placeholder="Project inquiry…"/>
+          </div>
+          <div class="form-group">
+            <label for="msgMessage">Message *</label>
+            <textarea id="msgMessage" placeholder="Tell me about your project…" required></textarea>
+            <span class="form-error hidden" id="errMsg">Message is required.</span>
+          </div>
+          <button type="submit" id="contactSubmitBtn" class="btn-primary" style="width:100%;justify-content:center">
+            <span id="contactBtnText">Send Message</span>
+            <span id="contactSpinner" class="spinner-ring hidden" style="width:18px;height:18px;border-width:2px"></span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ FOOTER ═══════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo"><span id="footerName">Dev</span>.portfolio</div>
+    <p class="footer-copy" id="footerCopy">© 2024 · Built with Node.js + Vanilla JS</p>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

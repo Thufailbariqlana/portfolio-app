@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard — Portfolio</title>
+  <link rel="stylesheet" href="css/admin.css"/>
+</head>
+<body>
+<div class="dashboard-layout">
+
+  <!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="10" fill="#3b82f6"/>
+        <path d="M12 28V14h5l3 8 3-8h5v14h-4v-8l-2.5 6h-3L16 20v8h-4z" fill="#fff"/>
+      </svg>
+      Portfolio Admin
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <div class="nav-item active" data-section="overview">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Dashboard
+      </div>
+
+      <div class="nav-section-label">Content</div>
+      <div class="nav-item" data-section="profile">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+        Profile
+      </div>
+      <div class="nav-item" data-section="experiences">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+        </svg>
+        Experience
+      </div>
+      <div class="nav-item" data-section="projects">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <polygon points="12 2 2 7 12 12 22 7"/><polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+        Projects
+      </div>
+      <div class="nav-item" data-section="education">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+        Education
+      </div>
+      <div class="nav-item" data-section="certificates">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+        </svg>
+        Certificates
+      </div>
+      <div class="nav-item" data-section="skills">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Skills
+      </div>
+
+      <div class="nav-section-label">Inbox</div>
+      <div class="nav-item" data-section="contacts">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+        Messages
+        <span class="nav-badge hidden" id="navBadge">0</span>
+      </div>
+
+      <div class="nav-section-label">Account</div>
+      <div class="nav-item" data-section="security">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Security
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="userAvatar">A</div>
+        <div class="sidebar-user-info">
+          <strong id="sidebarUsername">Admin</strong>
+          <span id="sidebarRole">admin</span>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Logout">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════════════════════════ HEADER ════════════════════════ -->
+  <header class="main-header">
+    <div class="header-title">
+      <h2 id="headerTitle">Dashboard</h2>
+      <p id="headerSub">Welcome back!</p>
+    </div>
+    <div style="display:flex;gap:.5rem;">
+      <a href="../portfolio/index.html" target="_blank" class="btn btn-ghost btn-sm">
+        View Portfolio ↗
+      </a>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════ MAIN ════════════════════════════ -->
+  <main class="main-content">
+
+    <!-- ─── OVERVIEW ───────────────────────────────────────── -->
+    <div id="section-overview" class="section-panel active">
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-icon blue">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polygon points="12 2 2 7 12 12 22 7"/></svg></div>
+          <div><div class="stat-val" id="statProjects">–</div><div class="stat-label">Projects</div></div>
+        </div>
+        <div class="stat-card"><div class="stat-icon green">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="2" y="7" width="20" height="14" rx="2"/></svg></div>
+          <div><div class="stat-val" id="statExp">–</div><div class="stat-label">Experiences</div></div>
+        </div>
+        <div class="stat-card"><div class="stat-icon orange">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="6"/></svg></div>
+          <div><div class="stat-val" id="statCerts">–</div><div class="stat-label">Certificates</div></div>
+        </div>
+        <div class="stat-card"><div class="stat-icon purple">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div><div class="stat-val" id="statSkills">–</div><div class="stat-label">Skills</div></div>
+        </div>
+        <div class="stat-card"><div class="stat-icon red">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/></svg></div>
+          <div><div class="stat-val" id="statMsgs">–</div><div class="stat-label">Unread Messages</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Recent Messages</h3></div>
+        <div class="card-body table-wrap">
+          <table>
+            <thead><tr>
+              <th>From</th><th>Subject</th><th>Date</th><th>Status</th>
+            </tr></thead>
+            <tbody id="recentMsgs"><tr><td colspan="4" class="text-muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PROFILE ─────────────────────────────────────────── -->
+    <div id="section-profile" class="section-panel">
+      <div id="profileAlert"></div>
+      <div class="card mb-4">
+        <div class="card-header"><h3>Photo & CV</h3></div>
+        <div class="card-body">
+          <div class="profile-photo-wrap">
+            <img id="profilePhoto" src="" alt="Profile Photo" class="profile-photo"
+                 onerror="this.src='https://ui-avatars.com/api/?name=Admin&size=88'"/>
+            <div class="profile-photo-actions">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+                Upload Photo
+                <input type="file" id="photoInput" accept="image/*" style="display:none"
+                       onchange="uploadPhoto(this)"/>
+              </label>
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+                Upload CV/PDF
+                <input type="file" id="cvInput" accept=".pdf,image/*" style="display:none"
+                       onchange="uploadCV(this)"/>
+              </label>
+              <a id="cvLink" href="#" target="_blank" class="btn btn-ghost btn-sm hidden">Download CV</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Personal Information</h3>
+          <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save Changes</button>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group"><label>Full Name</label>
+              <input type="text" id="pFullName" placeholder="Your full name"/></div>
+            <div class="form-group"><label>Title / Position</label>
+              <input type="text" id="pTitle" placeholder="e.g. Full-Stack Developer"/></div>
+          </div>
+          <div class="form-group"><label>Bio</label>
+            <textarea id="pBio" rows="4" placeholder="Write a short bio…"></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>Email</label>
+              <input type="email" id="pEmail" placeholder="you@example.com"/></div>
+            <div class="form-group"><label>Phone</label>
+              <input type="text" id="pPhone" placeholder="+62…"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Location</label>
+              <input type="text" id="pLocation" placeholder="City, Country"/></div>
+            <div class="form-group"><label>Website</label>
+              <input type="url" id="pWebsite" placeholder="https://…"/></div>
+          </div>
+          <div class="form-row cols-3">
+            <div class="form-group"><label>GitHub URL</label>
+              <input type="url" id="pGithub" placeholder="https://github.com/…"/></div>
+            <div class="form-group"><label>LinkedIn URL</label>
+              <input type="url" id="pLinkedin" placeholder="https://linkedin.com/in/…"/></div>
+            <div class="form-group"><label>Twitter URL</label>
+              <input type="url" id="pTwitter" placeholder="https://twitter.com/…"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Years of Experience</label>
+              <input type="number" id="pYears" min="0" max="60" placeholder="3"/></div>
+            <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
+              <div class="checkbox-row">
+                <input type="checkbox" id="pOpenToWork"/>
+                <label for="pOpenToWork" style="margin:0;font-weight:400">Open to Work</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── EXPERIENCES ─────────────────────────────────────── -->
+    <div id="section-experiences" class="section-panel">
+      <div id="expAlert"></div>
+      <div class="card">
+        <div class="card-header"><h3>Work Experience</h3>
+          <button class="btn btn-primary btn-sm" onclick="openExpModal()">+ Add</button></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Company</th><th>Position</th><th>Period</th><th>Tech Stack</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="expTableBody"><tr><td colspan="5" class="text-muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PROJECTS ─────────────────────────────────────────── -->
+    <div id="section-projects" class="section-panel">
+      <div id="projAlert"></div>
+      <div class="card">
+        <div class="card-header"><h3>Portfolio Projects</h3>
+          <button class="btn btn-primary btn-sm" onclick="openProjModal()">+ Add</button></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Image</th><th>Title</th><th>Category</th><th>Featured</th><th>Links</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="projTableBody"><tr><td colspan="6" class="text-muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── EDUCATION ─────────────────────────────────────────── -->
+    <div id="section-education" class="section-panel">
+      <div id="eduAlert"></div>
+      <div class="card">
+        <div class="card-header"><h3>Education</h3>
+          <button class="btn btn-primary btn-sm" onclick="openEduModal()">+ Add</button></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Institution</th><th>Degree</th><th>Field</th><th>Year</th><th>GPA</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="eduTableBody"><tr><td colspan="6" class="text-muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── CERTIFICATES ─────────────────────────────────────── -->
+    <div id="section-certificates" class="section-panel">
+      <div id="certAlert"></div>
+      <div class="card">
+        <div class="card-header"><h3>Certificates</h3>
+          <button class="btn btn-primary btn-sm" onclick="openCertModal()">+ Add</button></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Image</th><th>Name</th><th>Issuer</th><th>Issued</th><th>Credential</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="certTableBody"><tr><td colspan="6" class="text-muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SKILLS ────────────────────────────────────────────── -->
+    <div id="section-skills" class="section-panel">
+      <div id="skillAlert"></div>
+      <div class="card">
+        <div class="card-header"><h3>Skills</h3>
+          <button class="btn btn-primary btn-sm" onclick="openSkillModal()">+ Add</button></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>Name</th><th>Category</th><th>Level</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="skillTableBody"><tr><td colspan="4" class="text-muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── CONTACTS ─────────────────────────────────────────── -->
+    <div id="section-contacts" class="section-panel">
+      <div id="contactAlert"></div>
+      <div class="card">
+        <div class="card-header"><h3>Messages</h3>
+          <span id="unreadCount" class="badge badge-blue"></span></div>
+        <div class="card-body table-wrap">
+          <table><thead><tr>
+            <th>From</th><th>Email</th><th>Subject</th><th>Preview</th><th>Date</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="contactTableBody"><tr><td colspan="6" class="text-muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SECURITY ──────────────────────────────────────────── -->
+    <div id="section-security" class="section-panel">
+      <div class="card" style="max-width:480px">
+        <div class="card-header"><h3>Change Password</h3></div>
+        <div class="card-body">
+          <div id="securityAlert"></div>
+          <div class="form-group"><label>Current Password</label>
+            <input type="password" id="curPw" placeholder="Enter current password"/></div>
+          <div class="form-group"><label>New Password</label>
+            <input type="password" id="newPw" placeholder="Min. 8 characters"
+                   oninput="checkPwStrength(this.value)"/>
+            <div class="pw-strength"><div class="pw-strength-fill" id="pwStrengthFill"></div></div>
+            <span class="text-muted" style="font-size:11px" id="pwStrengthLabel"></span>
+          </div>
+          <div class="form-group"><label>Confirm New Password</label>
+            <input type="password" id="confirmPw" placeholder="Repeat new password"/></div>
+          <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+        </div>
+      </div>
+    </div>
+
+  </main><!-- /main-content -->
+</div><!-- /dashboard-layout -->
+
+<!-- ═══════════════════════ MODALS ══════════════════════════ -->
+
+<!-- EXPERIENCE MODAL -->
+<div class="modal-overlay hidden" id="expModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="expModalTitle">Add Experience</h3>
+      <button class="modal-close" onclick="closeModal('expModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="expId"/>
+      <div class="form-row">
+        <div class="form-group"><label>Company *</label>
+          <input type="text" id="expCompany" placeholder="Company name"/></div>
+        <div class="form-group"><label>Position *</label>
+          <input type="text" id="expPosition" placeholder="Job title"/></div>
+      </div>
+      <div class="form-group"><label>Location</label>
+        <input type="text" id="expLocation" placeholder="City, Country (Remote)"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Start Date *</label>
+          <input type="date" id="expStartDate"/></div>
+        <div class="form-group"><label>End Date</label>
+          <input type="date" id="expEndDate"/></div>
+      </div>
+      <div class="form-group">
+        <div class="checkbox-row">
+          <input type="checkbox" id="expIsCurrent" onchange="toggleCurrentJob(this)"/>
+          <label for="expIsCurrent" style="margin:0;font-weight:400">Currently working here</label>
+        </div>
+      </div>
+      <div class="form-group"><label>Description</label>
+        <textarea id="expDesc" rows="3" placeholder="Key responsibilities and achievements…"></textarea></div>
+      <div class="form-group"><label>Tech Stack</label>
+        <input type="text" id="expTech" placeholder="React, Node.js, PostgreSQL (comma separated)"/></div>
+      <div class="form-group"><label>Sort Order</label>
+        <input type="number" id="expSort" value="0" min="0"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('expModal')">Cancel</button>
+      <button class="btn btn-primary" id="expSaveBtn" onclick="saveExperience()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECT MODAL -->
+<div class="modal-overlay hidden" id="projModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="projModalTitle">Add Project</h3>
+      <button class="modal-close" onclick="closeModal('projModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="projId"/>
+      <div class="form-group"><label>Title *</label>
+        <input type="text" id="projTitle" placeholder="Project name"/></div>
+      <div class="form-group"><label>Short Description</label>
+        <input type="text" id="projShortDesc" placeholder="One-line summary (max 300 chars)"/></div>
+      <div class="form-group"><label>Full Description</label>
+        <textarea id="projDesc" rows="4" placeholder="Detailed project description…"></textarea></div>
+      <div class="form-group"><label>Project Image</label>
+        <input type="file" id="projImage" accept="image/*"/>
+        <img id="projImagePreview" src="" alt="" style="max-height:80px;margin-top:.5rem;display:none;border-radius:4px;"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Demo URL</label>
+          <input type="url" id="projDemo" placeholder="https://…"/></div>
+        <div class="form-group"><label>Repository URL</label>
+          <input type="url" id="projRepo" placeholder="https://github.com/…"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Category</label>
+          <input type="text" id="projCategory" placeholder="Web, Mobile, AI…"/></div>
+        <div class="form-group"><label>Tech Stack</label>
+          <input type="text" id="projTech" placeholder="React, Express, MySQL"/></div>
+      </div>
+      <div class="form-row cols-3">
+        <div class="form-group"><label>Metric: Users</label>
+          <input type="text" id="projMetricUsers" placeholder="10k+ users"/></div>
+        <div class="form-group"><label>Metric: Performance</label>
+          <input type="text" id="projMetricPerf" placeholder="99.9% uptime"/></div>
+        <div class="form-group"><label>Metric: Custom</label>
+          <input type="text" id="projMetricCustom" placeholder="Reduced cost 40%"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="checkbox-row">
+            <input type="checkbox" id="projFeatured"/>
+            <label for="projFeatured" style="margin:0;font-weight:400">Featured project</label>
+          </div>
+        </div>
+        <div class="form-group"><label>Sort Order</label>
+          <input type="number" id="projSort" value="0" min="0"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('projModal')">Cancel</button>
+      <button class="btn btn-primary" id="projSaveBtn" onclick="saveProject()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDUCATION MODAL -->
+<div class="modal-overlay hidden" id="eduModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="eduModalTitle">Add Education</h3>
+      <button class="modal-close" onclick="closeModal('eduModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="eduId"/>
+      <div class="form-group"><label>Institution *</label>
+        <input type="text" id="eduInstitution" placeholder="University / School name"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Degree *</label>
+          <input type="text" id="eduDegree" placeholder="Bachelor's, Master's…"/></div>
+        <div class="form-group"><label>Field of Study</label>
+          <input type="text" id="eduField" placeholder="Computer Science"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Start Year *</label>
+          <input type="number" id="eduStartYear" placeholder="2018" min="1950" max="2100"/></div>
+        <div class="form-group"><label>End Year</label>
+          <input type="number" id="eduEndYear" placeholder="2022" min="1950" max="2100"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="checkbox-row">
+            <input type="checkbox" id="eduIsCurrent"/>
+            <label for="eduIsCurrent" style="margin:0;font-weight:400">Currently studying</label>
+          </div>
+        </div>
+        <div class="form-group"><label>GPA</label>
+          <input type="number" id="eduGpa" placeholder="3.85" min="0" max="4" step="0.01"/></div>
+      </div>
+      <div class="form-group"><label>Description</label>
+        <textarea id="eduDesc" rows="3" placeholder="Activities, achievements, thesis…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('eduModal')">Cancel</button>
+      <button class="btn btn-primary" id="eduSaveBtn" onclick="saveEducation()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CERTIFICATE MODAL -->
+<div class="modal-overlay hidden" id="certModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="certModalTitle">Add Certificate</h3>
+      <button class="modal-close" onclick="closeModal('certModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="certId"/>
+      <div class="form-group"><label>Certificate Name *</label>
+        <input type="text" id="certName" placeholder="AWS Solutions Architect…"/></div>
+      <div class="form-group"><label>Issuer *</label>
+        <input type="text" id="certIssuer" placeholder="Amazon Web Services"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Issue Date *</label>
+          <input type="date" id="certIssueDate"/></div>
+        <div class="form-group"><label>Expiry Date</label>
+          <input type="date" id="certExpiryDate"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Credential ID</label>
+          <input type="text" id="certCredId" placeholder="ABC123XYZ"/></div>
+        <div class="form-group"><label>Credential URL</label>
+          <input type="url" id="certCredUrl" placeholder="https://…"/></div>
+      </div>
+      <div class="form-group"><label>Certificate Image</label>
+        <input type="file" id="certImage" accept="image/*"/>
+        <img id="certImagePreview" src="" alt="" style="max-height:80px;margin-top:.5rem;display:none;border-radius:4px;"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('certModal')">Cancel</button>
+      <button class="btn btn-primary" id="certSaveBtn" onclick="saveCertificate()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SKILL MODAL -->
+<div class="modal-overlay hidden" id="skillModal">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <h3 id="skillModalTitle">Add Skill</h3>
+      <button class="modal-close" onclick="closeModal('skillModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="skillId"/>
+      <div class="form-group"><label>Skill Name *</label>
+        <input type="text" id="skillName" placeholder="JavaScript"/></div>
+      <div class="form-group"><label>Category</label>
+        <input type="text" id="skillCategory" placeholder="Frontend, Backend, DevOps…"/></div>
+      <div class="form-group">
+        <label>Proficiency Level: <span id="skillLevelDisplay">80</span>%</label>
+        <input type="range" id="skillLevel" min="0" max="100" value="80"
+               oninput="document.getElementById('skillLevelDisplay').textContent=this.value"
+               style="width:100%;margin-top:.35rem;accent-color:var(--primary)"/>
+      </div>
+      <div class="form-group"><label>Icon URL</label>
+        <input type="url" id="skillIcon" placeholder="https://cdn.…/icon.svg (optional)"/></div>
+      <div class="form-group"><label>Sort Order</label>
+        <input type="number" id="skillSort" value="0" min="0"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('skillModal')">Cancel</button>
+      <button class="btn btn-primary" id="skillSaveBtn" onclick="saveSkill()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MESSAGE VIEW MODAL -->
+<div class="modal-overlay hidden" id="msgModal">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-header">
+      <h3>Message</h3>
+      <button class="modal-close" onclick="closeModal('msgModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:.4rem"><strong>From:</strong> <span id="msgFrom"></span></p>
+      <p style="margin-bottom:.4rem"><strong>Email:</strong> <a id="msgEmail" href="#"></a></p>
+      <p style="margin-bottom:.4rem"><strong>Subject:</strong> <span id="msgSubject"></span></p>
+      <p style="margin-bottom:.75rem;color:var(--muted);font-size:12px"><strong>Date:</strong> <span id="msgDate"></span></p>
+      <hr style="margin-bottom:.75rem;border:none;border-top:1px solid var(--border)"/>
+      <p id="msgBody" style="white-space:pre-wrap;line-height:1.7;font-size:13px"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('msgModal')">Close</button>
+      <a id="msgReplyLink" href="#" class="btn btn-primary">Reply via Email</a>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay hidden" id="deleteModal">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-header">
+      <h3>Confirm Delete</h3>
+      <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="deleteModalMsg">Are you sure you want to delete this item? This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/experience.js"></script>
+<script src="js/project.js"></script>
+<script src="js/education.js"></script>
+<script src="js/certificate.js"></script>
+<script src="js/skill.js"></script>
+<script src="js/contacts.js"></script>
+</body>
+</html>

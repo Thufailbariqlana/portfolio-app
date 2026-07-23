@@ -1,0 +1,57 @@
+# ============================================================
+#  render.yaml — Render Blueprint (Infrastructure as Code)
+#  Commit this file to your repo root. Render will auto-detect
+#  it and configure the web service automatically.
+#
+#  Docs: https://render.com/docs/blueprint-spec
+# ============================================================
+
+services:
+  - type: web
+    name: portfolio-api
+    runtime: node
+    region: singapore          # closest to SEA — change if needed
+    plan: free                 # free tier (750 hrs/month)
+    rootDir: backend           # folder to deploy
+    buildCommand: npm install
+    startCommand: node server.js
+
+    # Auto-deploy when you push to main branch
+    autoDeploy: true
+
+    # Health-check so Render knows when the app is ready
+    healthCheckPath: /api/health
+
+    # Environment variables — set these in Render Dashboard
+    # (or fill in the values below, but DO NOT commit secrets to git)
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DB_HOST
+        sync: false          # fill in Render dashboard
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      - key: DB_SSL_REJECT_UNAUTHORIZED
+        value: "true"
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGINS
+        sync: false          # fill in Render dashboard after Vercel deploy
+      - key: MAX_FILE_SIZE
+        value: "5242880"
+      - key: UPLOAD_DIR
+        value: ./uploads
+      - key: BCRYPT_ROUNDS
+        value: "12"

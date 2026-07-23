@@ -1,0 +1,530 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Portfolio App — Setup &amp; Deployment Guide</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI",system-ui,sans-serif;font-size:14px;
+  line-height:1.65;color:#1f2328;background:#fff;max-width:760px;margin:0 auto;padding:1.5rem 1.25rem 3rem}
+h1{font-size:1.55rem;font-weight:800;margin-bottom:.25rem;letter-spacing:-.025em}
+h2{font-size:1.05rem;font-weight:700;margin:2rem 0 .6rem;padding-top:1.5rem;
+  border-top:1px solid #e5e7eb;color:#1f2328}
+h3{font-size:.9rem;font-weight:700;margin:1.25rem 0 .4rem;color:#1f2328}
+p{margin-bottom:.75rem;color:#374151}
+a{color:#3b82d4;text-decoration:none}a:hover{text-decoration:underline}
+code{background:#f6f8fa;border:1px solid #e5e7eb;border-radius:4px;
+  padding:.1em .35em;font-family:"SF Mono","Fira Code",monospace;font-size:.82em;color:#24292f}
+pre{background:#f6f8fa;border:1px solid #e5e7eb;border-radius:8px;
+  padding:.9rem 1rem;overflow-x:auto;margin:.5rem 0 1rem;
+  font-family:"SF Mono","Fira Code",monospace;font-size:.8rem;line-height:1.6;color:#24292f}
+pre code{background:none;border:none;padding:0;font-size:inherit}
+.lead{color:#57606a;font-size:.9rem;margin-bottom:1.5rem}
+
+/* Phase badges */
+.phase{display:flex;align-items:center;gap:.6rem;margin:2rem 0 1rem;padding:1rem 1.1rem;
+  border-radius:10px;border:1px solid #e5e7eb;background:#f7f8fa}
+.phase-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;color:#fff}
+.ph-local .phase-num{background:#3b82d4}
+.ph-prod  .phase-num{background:#7c5cd8}
+.ph-ref   .phase-num{background:#16a34a}
+.phase-title{font-weight:700;font-size:.95rem}
+.phase-sub{font-size:.8rem;color:#57606a}
+
+/* Steps */
+.step{margin-bottom:1.4rem}
+.step-header{display:flex;align-items:center;gap:.55rem;margin-bottom:.4rem}
+.step-badge{display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;background:#3b82d4;color:#fff;
+  font-size:.72rem;font-weight:700;flex-shrink:0}
+.step-title{font-weight:600;font-size:.875rem}
+.step-body{padding-left:1.8rem}
+
+/* Alerts */
+.alert{padding:.7rem 1rem;border-radius:8px;font-size:.82rem;margin:.75rem 0;
+  border-left:4px solid}
+.alert-warn{background:#fffbeb;border-color:#f59e0b;color:#92400e}
+.alert-info{background:#eff6ff;border-color:#3b82d4;color:#1e40af}
+.alert-success{background:#f0fdf4;border-color:#16a34a;color:#14532d}
+.alert-danger{background:#fef2f2;border-color:#ef4444;color:#991b1b}
+
+/* Table */
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.8rem}
+thead th{background:#f7f8fa;border:1px solid #e5e7eb;padding:.45rem .65rem;
+  font-weight:700;text-align:left;color:#374151}
+tbody td{border:1px solid #e5e7eb;padding:.4rem .65rem;vertical-align:top}
+tbody tr:nth-child(even) td{background:#fafbfc}
+.badge{display:inline-block;padding:.1rem .45rem;border-radius:99px;font-size:.7rem;
+  font-weight:700;white-space:nowrap}
+.badge-blue{background:#eff6ff;color:#1d4ed8}
+.badge-gray{background:#f1f5f9;color:#475569}
+.badge-green{background:#f0fdf4;color:#15803d}
+
+/* File tree */
+.file-tree{background:#f6f8fa;border:1px solid #e5e7eb;border-radius:8px;
+  padding:.9rem 1rem;font-family:"SF Mono","Fira Code",monospace;font-size:.78rem;
+  line-height:1.8;margin:.5rem 0 1rem;overflow-x:auto}
+.tree-dir{color:#7c5cd8;font-weight:700}
+.tree-file{color:#24292f}
+.tree-comment{color:#57606a;margin-left:.5rem}
+
+/* Two-col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.5rem 0 1rem}
+.info-card{background:#f7f8fa;border:1px solid #e5e7eb;border-radius:8px;padding:.85rem 1rem;font-size:.82rem}
+.info-card strong{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#57606a;margin-bottom:.3rem}
+
+/* Checklist */
+.checklist{list-style:none;margin:.5rem 0 1rem}
+.checklist li{padding:.25rem 0;padding-left:1.5rem;position:relative;font-size:.83rem;color:#374151}
+.checklist li::before{content:'✓';position:absolute;left:0;color:#16a34a;font-weight:700}
+.checklist li.warn::before{content:'⚠';color:#f59e0b}
+
+/* Trouble table */
+.trouble td:first-child{font-family:"SF Mono","Fira Code",monospace;font-size:.77rem;
+  color:#ef4444;width:38%}
+
+/* Footer */
+.site-footer{margin-top:3rem;padding-top:1rem;border-top:1px solid #e5e7eb;
+  text-align:center;font-size:.75rem;color:#8c959f}
+
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<h1>Portfolio App</h1>
+<p class="lead">Complete guide — local development setup &amp; production deployment to VPS with Nginx + PM2 + SSL.</p>
+
+<div class="alert alert-warn">
+  ⚠️ <strong>Default admin credentials:</strong> username <code>admin</code> / password <code>Admin@1234</code> — change immediately after first login.
+</div>
+
+
+<h2>Prerequisites</h2>
+<div class="two-col">
+  <div class="info-card"><strong>Local Machine</strong>Node.js ≥ 18, MySQL 8+, Git, VS Code (optional)</div>
+  <div class="info-card"><strong>For Deployment</strong>Ubuntu 20.04/22.04 VPS, domain name with A record pointed to server IP</div>
+</div>
+
+
+<div class="phase ph-local">
+  <div class="phase-num">1</div>
+  <div><div class="phase-title">Local Development Setup</div>
+  <div class="phase-sub">Run the full stack on your own machine in minutes</div></div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">1</div><div class="step-title">Install backend dependencies</div></div>
+  <div class="step-body">
+<pre><code>cd portfolio-app/backend
+npm install</code></pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">2</div><div class="step-title">Create MySQL database &amp; import schema</div></div>
+  <div class="step-body">
+<pre><code># Login to MySQL
+mysql -u root -p
+
+# Inside MySQL shell:
+CREATE DATABASE portfolio_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+EXIT;
+
+# Import the full schema (9 tables + seed data)
+mysql -u root -p portfolio_db &lt; ../database/schema.sql</code></pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">3</div><div class="step-title">Create the <code>.env</code> config file</div></div>
+  <div class="step-body">
+<pre><code>cp .env.example .env</code></pre>
+    <p>Open <code>.env</code> and fill in:</p>
+<pre><code>NODE_ENV=development
+PORT=5000
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_NAME=portfolio_db
+
+# Generate: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+JWT_SECRET=paste_64_char_random_string_here
+JWT_EXPIRES_IN=7d
+
+MAX_FILE_SIZE=5242880
+UPLOAD_DIR=./uploads
+CORS_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
+BCRYPT_ROUNDS=12</code></pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">4</div><div class="step-title">Change default admin password</div></div>
+  <div class="step-body">
+<pre><code># Generate bcrypt hash for your new password:
+node -e "const b=require('bcryptjs'); b.hash('YourNewPass!',12).then(console.log)"
+
+# Update in MySQL (paste the output hash):
+mysql -u root -p portfolio_db -e \
+  "UPDATE users SET password_hash='PASTE_HASH_HERE' WHERE username='admin';"</code></pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">5</div><div class="step-title">Start the backend server</div></div>
+  <div class="step-body">
+<pre><code># Development (nodemon — auto-restart on save)
+npm run dev
+
+# Production
+npm start</code></pre>
+    <ul class="checklist">
+      <li>API running at <code>http://localhost:5000</code></li>
+      <li>Health check: <code>http://localhost:5000/api/health</code></li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">6</div><div class="step-title">Open the frontend</div></div>
+  <div class="step-body">
+<pre><code># Option A: VS Code Live Server (recommended)
+# Right-click frontend/portfolio/index.html → "Open with Live Server"
+# Default URL: http://127.0.0.1:5500
+
+# Option B: npx serve (no install needed)
+npx serve frontend/portfolio -p 3000   # Portfolio
+npx serve frontend/admin    -p 3001   # Admin
+
+# Option C: Python
+cd frontend/portfolio &amp;&amp; python -m http.server 3000</code></pre>
+    <div class="two-col">
+      <div class="info-card"><strong>Portfolio URL</strong>http://127.0.0.1:5500<br />(or localhost:3000)</div>
+      <div class="info-card"><strong>Admin Dashboard</strong>http://127.0.0.1:3001/index.html</div>
+    </div>
+  </div>
+</div>
+
+
+<div class="phase ph-prod">
+  <div class="phase-num">2</div>
+  <div><div class="phase-title">Production Deployment (Ubuntu VPS)</div>
+  <div class="phase-sub">Nginx reverse proxy + PM2 process manager + Let's Encrypt SSL</div></div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">1</div><div class="step-title">Server prep — Node.js 20 + MySQL + Nginx</div></div>
+  <div class="step-body">
+<pre><code>ssh root@YOUR_SERVER_IP
+apt update &amp;&amp; apt upgrade -y
+
+# Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+
+# MySQL 8
+apt install -y mysql-server
+mysql_secure_installation
+
+# Nginx
+apt install -y nginx
+systemctl enable nginx &amp;&amp; systemctl start nginx
+
+# PM2
+npm install -g pm2</code></pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">2</div><div class="step-title">Create dedicated database user</div></div>
+  <div class="step-body">
+<pre><code>mysql -u root -p
+
+CREATE DATABASE portfolio_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'portfolio_user'@'localhost' IDENTIFIED BY 'StrongDbPass!';
+GRANT ALL PRIVILEGES ON portfolio_db.* TO 'portfolio_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;</code></pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">3</div><div class="step-title">Upload project &amp; install dependencies</div></div>
+  <div class="step-body">
+<pre><code># From LOCAL machine — upload via SCP:
+scp -r portfolio-app/ root@YOUR_SERVER_IP:/var/www/portfolio-app
+
+# OR via Git on the server:
+cd /var/www
+git clone https://github.com/yourusername/portfolio-app.git
+
+# On server — install backend deps:
+cd /var/www/portfolio-app/backend
+npm install --production
+
+# Import schema:
+mysql -u portfolio_user -p portfolio_db &lt; /var/www/portfolio-app/database/schema.sql</code></pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">4</div><div class="step-title">Create production <code>.env</code></div></div>
+  <div class="step-body">
+<pre><code>nano /var/www/portfolio-app/backend/.env</code></pre>
+<pre><code>NODE_ENV=production
+PORT=5000
+DB_HOST=localhost
+DB_USER=portfolio_user
+DB_PASSWORD=StrongDbPass!
+DB_NAME=portfolio_db
+JWT_SECRET=your_64_char_random_secret
+JWT_EXPIRES_IN=7d
+MAX_FILE_SIZE=5242880
+UPLOAD_DIR=./uploads
+CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+BCRYPT_ROUNDS=12</code></pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">5</div><div class="step-title">Update API base URL in frontend JS files</div></div>
+  <div class="step-body">
+    <p>Edit these two lines in each file:</p>
+    <table>
+      <thead><tr><th>File</th><th>Variable</th><th>New value</th></tr></thead>
+      <tbody>
+        <tr><td><code>admin/js/auth.js</code></td><td><code>const API</code></td><td><code>'https://yourdomain.com/api'</code></td></tr>
+        <tr><td><code>admin/js/dashboard.js</code></td><td><code>const API</code></td><td><code>'https://yourdomain.com/api'</code></td></tr>
+        <tr><td><code>portfolio/js/main.js</code></td><td><code>const API</code></td><td><code>'https://yourdomain.com/api'</code></td></tr>
+        <tr><td><code>portfolio/js/main.js</code></td><td><code>const BASE</code></td><td><code>'https://yourdomain.com'</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">6</div><div class="step-title">Start backend with PM2</div></div>
+  <div class="step-body">
+<pre><code>cd /var/www/portfolio-app/backend
+
+pm2 start server.js --name "portfolio-api"
+pm2 startup    # generates systemd service command — run that output command
+pm2 save       # persist process list across reboots</code></pre>
+    <p>Useful PM2 commands:</p>
+<pre><code>pm2 status                   # view all processes
+pm2 logs portfolio-api       # live logs
+pm2 restart portfolio-api    # restart
+pm2 monit                    # CPU/RAM dashboard</code></pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">7</div><div class="step-title">Configure Nginx virtual host</div></div>
+  <div class="step-body">
+<pre><code>nano /etc/nginx/sites-available/portfolio</code></pre>
+<pre><code>server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+
+    # ── Portfolio (public site) ─────────────────────────────
+    root /var/www/portfolio-app/frontend/portfolio;
+    index index.html;
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # ── Admin dashboard ─────────────────────────────────────
+    location /admin/ {
+        alias /var/www/portfolio-app/frontend/admin/;
+        try_files $uri $uri/ /admin/index.html;
+    }
+
+    # ── API reverse proxy ────────────────────────────────────
+    location /api/ {
+        proxy_pass         http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade $http_upgrade;
+        proxy_set_header   Connection 'upgrade';
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # ── Uploaded files ───────────────────────────────────────
+    location /uploads/ {
+        alias /var/www/portfolio-app/backend/uploads/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # ── Upload size limit ────────────────────────────────────
+    client_max_body_size 10m;
+
+    # ── Security headers ─────────────────────────────────────
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # ── Gzip ─────────────────────────────────────────────────
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript;
+    gzip_min_length 256;
+}</code></pre>
+<pre><code>ln -s /etc/nginx/sites-available/portfolio /etc/nginx/sites-enabled/
+nginx -t              # Must output: syntax is ok
+systemctl reload nginx</code></pre>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="step-badge">8</div><div class="step-title">Install SSL with Let's Encrypt (Certbot)</div></div>
+  <div class="step-body">
+<pre><code>apt install -y certbot python3-certbot-nginx
+
+# Issue certificate (follow prompts — choose "Redirect HTTP to HTTPS")
+certbot --nginx -d yourdomain.com -d www.yourdomain.com
+
+# Test auto-renewal
+certbot renew --dry-run</code></pre>
+    <div class="alert alert-success">✅ Your site is now live at <strong>https://yourdomain.com</strong> with HTTPS!</div>
+  </div>
+</div>
+
+
+<div class="phase ph-ref">
+  <div class="phase-num">3</div>
+  <div><div class="phase-title">Quick Reference</div>
+  <div class="phase-sub">API table, file tree, and troubleshooting</div></div>
+</div>
+
+<h3>Complete API Endpoints</h3>
+<table>
+  <thead><tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge badge-green">POST</span></td><td><code>/api/auth/login</code></td><td>—</td><td>Admin login → JWT token</td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/auth/me</code></td><td>JWT</td><td>Current user info</td></tr>
+    <tr><td><span class="badge badge-blue">PUT</span></td><td><code>/api/auth/change-password</code></td><td>JWT</td><td>Change password</td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/profile</code></td><td>—</td><td>Get full profile</td></tr>
+    <tr><td><span class="badge badge-blue">PUT</span></td><td><code>/api/profile</code></td><td>JWT</td><td>Update profile fields</td></tr>
+    <tr><td><span class="badge badge-green">POST</span></td><td><code>/api/profile/photo</code></td><td>JWT</td><td>Upload profile photo</td></tr>
+    <tr><td><span class="badge badge-green">POST</span></td><td><code>/api/profile/cv</code></td><td>JWT</td><td>Upload CV / PDF</td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/projects</code></td><td>—</td><td>List projects <code>?featured=true&amp;category=</code></td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/projects/:idOrSlug</code></td><td>—</td><td>Single project by ID or slug</td></tr>
+    <tr><td><span class="badge badge-green">POST</span></td><td><code>/api/projects</code></td><td>JWT</td><td>Create project + image upload</td></tr>
+    <tr><td><span class="badge badge-blue">PUT</span></td><td><code>/api/projects/:id</code></td><td>JWT</td><td>Update project + image</td></tr>
+    <tr><td><span class="badge badge-gray">DELETE</span></td><td><code>/api/projects/:id</code></td><td>JWT</td><td>Delete + remove image file</td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/experiences</code></td><td>—</td><td>List work history</td></tr>
+    <tr><td><span class="badge badge-green">POST</span></td><td><code>/api/experiences</code></td><td>JWT</td><td>Add experience</td></tr>
+    <tr><td><span class="badge badge-blue">PUT</span></td><td><code>/api/experiences/:id</code></td><td>JWT</td><td>Update experience</td></tr>
+    <tr><td><span class="badge badge-gray">DELETE</span></td><td><code>/api/experiences/:id</code></td><td>JWT</td><td>Delete experience</td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/education</code></td><td>—</td><td>List education</td></tr>
+    <tr><td><span class="badge badge-green">POST</span></td><td><code>/api/education</code></td><td>JWT</td><td>Add education</td></tr>
+    <tr><td><span class="badge badge-blue">PUT</span></td><td><code>/api/education/:id</code></td><td>JWT</td><td>Update education</td></tr>
+    <tr><td><span class="badge badge-gray">DELETE</span></td><td><code>/api/education/:id</code></td><td>JWT</td><td>Delete education</td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/certificates</code></td><td>—</td><td>List certificates</td></tr>
+    <tr><td><span class="badge badge-green">POST</span></td><td><code>/api/certificates</code></td><td>JWT</td><td>Add cert + image upload</td></tr>
+    <tr><td><span class="badge badge-blue">PUT</span></td><td><code>/api/certificates/:id</code></td><td>JWT</td><td>Update cert + image</td></tr>
+    <tr><td><span class="badge badge-gray">DELETE</span></td><td><code>/api/certificates/:id</code></td><td>JWT</td><td>Delete + remove image</td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/skills</code></td><td>—</td><td>List skills <code>?category=</code></td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/skills/categories</code></td><td>—</td><td>Unique category list</td></tr>
+    <tr><td><span class="badge badge-green">POST</span></td><td><code>/api/skills</code></td><td>JWT</td><td>Add skill</td></tr>
+    <tr><td><span class="badge badge-blue">PUT</span></td><td><code>/api/skills/:id</code></td><td>JWT</td><td>Update skill</td></tr>
+    <tr><td><span class="badge badge-gray">DELETE</span></td><td><code>/api/skills/:id</code></td><td>JWT</td><td>Delete skill</td></tr>
+    <tr><td><span class="badge badge-green">POST</span></td><td><code>/api/contacts</code></td><td>—</td><td>Submit contact form</td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/contacts</code></td><td>JWT</td><td>List messages + unread count</td></tr>
+    <tr><td><span class="badge badge-blue">GET</span></td><td><code>/api/contacts/:id</code></td><td>JWT</td><td>Read message (auto-marks read)</td></tr>
+    <tr><td><span class="badge badge-blue">PATCH</span></td><td><code>/api/contacts/:id/read</code></td><td>JWT</td><td>Toggle read/unread</td></tr>
+    <tr><td><span class="badge badge-gray">DELETE</span></td><td><code>/api/contacts/:id</code></td><td>JWT</td><td>Delete message</td></tr>
+  </tbody>
+</table>
+
+<h3>Project File Tree</h3>
+<div class="file-tree">
+<span class="tree-dir">portfolio-app/</span>
+├── <span class="tree-dir">backend/</span>
+│   ├── <span class="tree-dir">config/</span>db.js            <span class="tree-comment">MySQL pool + helpers</span>
+│   ├── <span class="tree-dir">controllers/</span>
+│   │   ├── authController.js      <span class="tree-comment">login · /me · change-password</span>
+│   │   ├── profileController.js   <span class="tree-comment">get · update · photo · cv</span>
+│   │   ├── projectController.js   <span class="tree-comment">CRUD + slug + image</span>
+│   │   ├── experienceController.js
+│   │   ├── educationController.js
+│   │   ├── certificateController.js <span class="tree-comment">CRUD + image</span>
+│   │   ├── skillController.js     <span class="tree-comment">CRUD + categories</span>
+│   │   └── contactController.js   <span class="tree-comment">submit · list · read · delete</span>
+│   ├── <span class="tree-dir">middleware/</span>
+│   │   ├── authMiddleware.js      <span class="tree-comment">protect() · restrictTo()</span>
+│   │   └── uploadMiddleware.js    <span class="tree-comment">4× Multer instances</span>
+│   ├── <span class="tree-dir">routes/</span>                  <span class="tree-comment">8 route files</span>
+│   ├── <span class="tree-dir">uploads/</span>photos· projects· certificates
+│   ├── server.js                  <span class="tree-comment">Express app entry point</span>
+│   ├── .env.example
+│   └── package.json
+├── <span class="tree-dir">database/</span>schema.sql         <span class="tree-comment">9 tables + seed admin user</span>
+├── <span class="tree-dir">frontend/</span>
+│   ├── <span class="tree-dir">admin/</span>
+│   │   ├── index.html             <span class="tree-comment">Login page</span>
+│   │   ├── dashboard.html         <span class="tree-comment">Full CRUD dashboard</span>
+│   │   ├── css/admin.css
+│   │   └── js/  auth · dashboard · profile · experience
+│   │            project · education · certificate
+│   │            skill · contacts
+│   └── <span class="tree-dir">portfolio/</span>
+│       ├── index.html             <span class="tree-comment">Public portfolio (8 sections)</span>
+│       ├── css/style.css
+│       └── js/main.js             <span class="tree-comment">Fetch API + render engine</span>
+└── DEPLOYMENT.md
+</div>
+
+<h3>Troubleshooting</h3>
+<table class="trouble">
+  <thead><tr><th>Error / Symptom</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>MySQL connection refused</td>
+      <td>Run <code>sudo systemctl start mysql</code></td>
+    </tr>
+    <tr>
+      <td>CORS error in browser console</td>
+      <td>Add your frontend origin (e.g. <code>http://127.0.0.1:5500</code>) to <code>CORS_ORIGINS</code> in <code>.env</code>, then restart backend</td>
+    </tr>
+    <tr>
+      <td>Port 5000 already in use</td>
+      <td>Change <code>PORT</code> in <code>.env</code> and update <code>const API</code> in all frontend JS files</td>
+    </tr>
+    <tr>
+      <td>413 Request Entity Too Large</td>
+      <td>Add <code>client_max_body_size 10m;</code> to Nginx config. Also raise <code>MAX_FILE_SIZE</code> in <code>.env</code></td>
+    </tr>
+    <tr>
+      <td>PM2 app not starting</td>
+      <td>Run <code>pm2 logs portfolio-api</code> to see the error. Most common: missing <code>.env</code> or wrong DB password</td>
+    </tr>
+    <tr>
+      <td>401 Unauthorized (admin)</td>
+      <td>JWT expired — log out and log back in. Token is valid for <code>JWT_EXPIRES_IN</code> (default 7 days)</td>
+    </tr>
+    <tr>
+      <td>Images not showing in production</td>
+      <td>Check Nginx <code>location /uploads/</code> alias path matches actual uploads folder on disk</td>
+    </tr>
+    <tr>
+      <td>Slug already exists (409)</td>
+      <td>Two projects have the same title. Slightly change the title to generate a unique slug</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="alert alert-info">
+  💡 <strong>Tip:</strong> The full deployment guide is also saved as <code>portfolio-app/DEPLOYMENT.md</code> in your project for future reference.
+</div>
+
+<div class="site-footer">Made with IBM Bob</div>
+</body>
+</html>
