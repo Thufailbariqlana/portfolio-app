@@ -22,7 +22,6 @@ async function login(req, res) {
       return res.status(400).json({ success: false, message: 'Username and password are required.' });
     }
 
-    // Ambil baris user langsung dari helper query
     const rows = await query(
       'SELECT id, username, email, password_hash, role FROM users WHERE username = ? LIMIT 1',
       [username.trim()]
@@ -34,7 +33,6 @@ async function login(req, res) {
 
     const user = rows[0];
 
-    // Bandingkan password
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
