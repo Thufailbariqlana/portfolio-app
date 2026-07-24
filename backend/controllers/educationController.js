@@ -5,7 +5,7 @@ const { query, buildSetClause } = require('../config/db');
 // ── GET /api/education ────────────────────────────────────────────────────────
 async function getAll(req, res) {
   try {
-    const [rows] = await query('SELECT * FROM education ORDER BY sort_order ASC, start_year DESC');
+    const rows = await query('SELECT * FROM education ORDER BY sort_order ASC, start_year DESC');
     return res.status(200).json({ success: true, data: Array.isArray(rows) ? rows : [] });
   } catch (err) {
     console.error('[educationController.getAll]', err);
@@ -16,7 +16,7 @@ async function getAll(req, res) {
 // ── GET /api/education/:id ────────────────────────────────────────────────────
 async function getOne(req, res) {
   try {
-    const [rows] = await query('SELECT * FROM education WHERE id = ? LIMIT 1', [req.params.id]);
+    const rows = await query('SELECT * FROM education WHERE id = ? LIMIT 1', [req.params.id]);
     if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Education record not found.' });
     }
@@ -36,7 +36,7 @@ async function create(req, res) {
       return res.status(400).json({ success: false, message: 'institution, degree, and start_year are required.' });
     }
 
-    const result = await query(
+    const resDb = await query(
       `INSERT INTO education (institution, degree, field_of_study, start_year, end_year, is_current, gpa, description, sort_order)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -52,8 +52,17 @@ async function create(req, res) {
       ]
     );
 
-    const [created] = await query('SELECT * FROM education WHERE id = ? LIMIT 1', [result.insertId]);
-    return res.status(201).json({ success: true, message: 'Education record created.', data: created[0] });
+    // Dapatkan insertId dari resDb (jika resDb array, ambil resDb[0].insertId)
+    const insertId = resDb?.insertId || resDb?.[0]?.insertId;
+
+    if (!insertId) {
+      return res.status(500).json({ success: false, message: 'Failed to retrieve inserted record ID.' });
+    }
+
+    const created = await query('SELECT * FROM education WHERE id = ? LIMIT 1', [insertId]);
+    const createdData = Array.isArray(created) ? created[0] : created;
+
+    return res.status(201).json({ success: true, message: 'Education record created.', data: createdData });
   } catch (err) {
     console.error('[educationController.create]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -63,7 +72,7 @@ async function create(req, res) {
 // ── PUT /api/education/:id ────────────────────────────────────────────────────
 async function update(req, res) {
   try {
-    const [existing] = await query('SELECT id FROM education WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT id FROM education WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Education record not found.' });
     }
@@ -77,7 +86,7 @@ async function update(req, res) {
     const { clause, values } = buildSetClause(data);
     await query(`UPDATE education SET ${clause} WHERE id = ?`, [...values, req.params.id]);
 
-    const [updated] = await query('SELECT * FROM education WHERE id = ? LIMIT 1', [req.params.id]);
+    const updated = await query('SELECT * FROM education WHERE id = ? LIMIT 1', [req.params.id]);
     return res.status(200).json({ success: true, message: 'Education record updated.', data: updated[0] });
   } catch (err) {
     console.error('[educationController.update]', err);
@@ -88,7 +97,7 @@ async function update(req, res) {
 // ── DELETE /api/education/:id ─────────────────────────────────────────────────
 async function remove(req, res) {
   try {
-    const [existing] = await query('SELECT id FROM education WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT id FROM education WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Education record not found.' });
     }
