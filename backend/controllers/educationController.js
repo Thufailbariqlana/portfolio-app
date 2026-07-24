@@ -36,7 +36,7 @@ async function create(req, res) {
       return res.status(400).json({ success: false, message: 'institution, degree, and start_year are required.' });
     }
 
-    const [result] = await query(
+    const result = await query(
       `INSERT INTO education (institution, degree, field_of_study, start_year, end_year, is_current, gpa, description, sort_order)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [

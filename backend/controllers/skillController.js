@@ -11,7 +11,7 @@ async function getAll(req, res) {
     if (category) { sql += ' WHERE category = ?'; params.push(category); }
     sql += ' ORDER BY sort_order ASC, name ASC';
 
-    const [rows] = await query(sql, params);
+    const rows = await query(sql, params);
     return res.status(200).json({ success: true, data: Array.isArray(rows) ? rows : [] });
   } catch (err) {
     console.error('[skillController.getAll]', err);
@@ -22,7 +22,7 @@ async function getAll(req, res) {
 // ── GET /api/skills/:id ───────────────────────────────────────────────────────
 async function getOne(req, res) {
   try {
-    const [rows] = await query('SELECT * FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
+    const rows = await query('SELECT * FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
     if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Skill not found.' });
     }
@@ -36,7 +36,7 @@ async function getOne(req, res) {
 // ── GET /api/skills/categories ────────────────────────────────────────────────
 async function getCategories(req, res) {
   try {
-    const [rows] = await query('SELECT DISTINCT category FROM skills ORDER BY category ASC');
+    const rows = await query('SELECT DISTINCT category FROM skills ORDER BY category ASC');
     const categories = Array.isArray(rows) ? rows.map(r => r.category) : [];
     return res.status(200).json({ success: true, data: categories });
   } catch (err) {
@@ -57,12 +57,13 @@ async function create(req, res) {
       return res.status(400).json({ success: false, message: 'level must be a number between 0 and 100.' });
     }
 
-    const [result] = await query(
+    // Mengubah `const [result]` menjadi `const result`
+    const result = await query(
       'INSERT INTO skills (name, category, level, icon_url, sort_order) VALUES (?, ?, ?, ?, ?)',
       [name, category || 'General', levelVal, icon_url || '', sort_order || 0]
     );
 
-    const [created] = await query('SELECT * FROM skills WHERE id = ? LIMIT 1', [result.insertId]);
+    const created = await query('SELECT * FROM skills WHERE id = ? LIMIT 1', [result.insertId]);
     return res.status(201).json({ success: true, message: 'Skill created.', data: created[0] });
   } catch (err) {
     console.error('[skillController.create]', err);
@@ -73,7 +74,7 @@ async function create(req, res) {
 // ── PUT /api/skills/:id ───────────────────────────────────────────────────────
 async function update(req, res) {
   try {
-    const [existing] = await query('SELECT id FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT id FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Skill not found.' });
     }
@@ -95,7 +96,7 @@ async function update(req, res) {
     const { clause, values } = buildSetClause(data);
     await query(`UPDATE skills SET ${clause} WHERE id = ?`, [...values, req.params.id]);
 
-    const [updated] = await query('SELECT * FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
+    const updated = await query('SELECT * FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
     return res.status(200).json({ success: true, message: 'Skill updated.', data: updated[0] });
   } catch (err) {
     console.error('[skillController.update]', err);
@@ -106,7 +107,7 @@ async function update(req, res) {
 // ── DELETE /api/skills/:id ────────────────────────────────────────────────────
 async function remove(req, res) {
   try {
-    const [existing] = await query('SELECT id FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT id FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Skill not found.' });
     }
