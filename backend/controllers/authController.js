@@ -22,17 +22,16 @@ async function login(req, res) {
       return res.status(400).json({ success: false, message: 'Username and password are required.' });
     }
 
-    const rows = await query(
+    const [rows] = await query(
       'SELECT id, username, email, password_hash, role FROM users WHERE username = ? LIMIT 1',
       [username.trim()]
     );
 
-    if (!rows || rows.length === 0) {
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
 
     const user = rows[0];
-
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
@@ -62,7 +61,7 @@ async function getMe(req, res) {
       'SELECT id, username, email, role, created_at FROM users WHERE id = ? LIMIT 1',
       [req.user.id]
     );
-    if (rows.length === 0) {
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }
     return res.status(200).json({ success: true, data: rows[0] });
@@ -85,13 +84,15 @@ async function changePassword(req, res) {
     }
 
     const [rows] = await query('SELECT password_hash FROM users WHERE id = ? LIMIT 1', [req.user.id]);
-    if (rows.length === 0) return res.status(404).json({ success: false, message: 'User not found.' });
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
 
     const isMatch = await bcrypt.compare(currentPassword, rows[0].password_hash);
     if (!isMatch) return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
 
-    const rounds    = Number(process.env.BCRYPT_ROUNDS) || 12;
-    const newHash   = await bcrypt.hash(newPassword, rounds);
+    const rounds  = Number(process.env.BCRYPT_ROUNDS) || 12;
+    const newHash = await bcrypt.hash(newPassword, rounds);
     await query('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, req.user.id]);
 
     return res.status(200).json({ success: true, message: 'Password changed successfully.' });

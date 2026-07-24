@@ -6,7 +6,7 @@ const { query, buildSetClause } = require('../config/db');
 async function getAll(req, res) {
   try {
     const [rows] = await query('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC');
-    return res.status(200).json({ success: true, data: rows });
+    return res.status(200).json({ success: true, data: Array.isArray(rows) ? rows : [] });
   } catch (err) {
     console.error('[experienceController.getAll]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -17,7 +17,9 @@ async function getAll(req, res) {
 async function getOne(req, res) {
   try {
     const [rows] = await query('SELECT * FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
-    if (rows.length === 0) return res.status(404).json({ success: false, message: 'Experience not found.' });
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Experience not found.' });
+    }
     return res.status(200).json({ success: true, data: rows[0] });
   } catch (err) {
     console.error('[experienceController.getOne]', err);
@@ -40,10 +42,10 @@ async function create(req, res) {
       [
         company,
         position,
-        location  || '',
+        location    || '',
         start_date,
-        end_date  || null,
-        is_current ? 1 : 0,
+        end_date    || null,
+        is_current  ? 1 : 0,
         description || '',
         tech_stack  || '',
         sort_order  || 0
@@ -62,7 +64,9 @@ async function create(req, res) {
 async function update(req, res) {
   try {
     const [existing] = await query('SELECT id FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
-    if (existing.length === 0) return res.status(404).json({ success: false, message: 'Experience not found.' });
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Experience not found.' });
+    }
 
     const allowed = ['company','position','location','start_date','end_date','is_current','description','tech_stack','sort_order'];
     const data = {};
@@ -85,7 +89,9 @@ async function update(req, res) {
 async function remove(req, res) {
   try {
     const [existing] = await query('SELECT id FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
-    if (existing.length === 0) return res.status(404).json({ success: false, message: 'Experience not found.' });
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Experience not found.' });
+    }
 
     await query('DELETE FROM experiences WHERE id = ?', [req.params.id]);
     return res.status(200).json({ success: true, message: 'Experience deleted.' });
@@ -95,4 +101,4 @@ async function remove(req, res) {
   }
 }
 
-module.exports = { getAll, getOne, create, update, remove };
+module.exports = { getAll, getOne, create, update, remove, getExperiences: getAll };

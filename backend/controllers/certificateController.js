@@ -8,7 +8,7 @@ const { query, buildSetClause } = require('../config/db');
 async function getAll(req, res) {
   try {
     const [rows] = await query('SELECT * FROM certificates ORDER BY sort_order ASC, issue_date DESC');
-    return res.status(200).json({ success: true, data: rows });
+    return res.status(200).json({ success: true, data: Array.isArray(rows) ? rows : [] });
   } catch (err) {
     console.error('[certificateController.getAll]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -19,7 +19,9 @@ async function getAll(req, res) {
 async function getOne(req, res) {
   try {
     const [rows] = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
-    if (rows.length === 0) return res.status(404).json({ success: false, message: 'Certificate not found.' });
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Certificate not found.' });
+    }
     return res.status(200).json({ success: true, data: rows[0] });
   } catch (err) {
     console.error('[certificateController.getOne]', err);
@@ -65,7 +67,9 @@ async function create(req, res) {
 async function update(req, res) {
   try {
     const [existing] = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
-    if (existing.length === 0) return res.status(404).json({ success: false, message: 'Certificate not found.' });
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Certificate not found.' });
+    }
 
     const allowed = ['name','issuer','issue_date','expiry_date','credential_id','credential_url','sort_order'];
     const data = {};
@@ -96,7 +100,9 @@ async function update(req, res) {
 async function remove(req, res) {
   try {
     const [existing] = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
-    if (existing.length === 0) return res.status(404).json({ success: false, message: 'Certificate not found.' });
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Certificate not found.' });
+    }
 
     if (existing[0].image_url) {
       const imgPath = path.join(__dirname, '..', existing[0].image_url);

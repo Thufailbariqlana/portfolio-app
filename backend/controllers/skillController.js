@@ -12,7 +12,7 @@ async function getAll(req, res) {
     sql += ' ORDER BY sort_order ASC, name ASC';
 
     const [rows] = await query(sql, params);
-    return res.status(200).json({ success: true, data: rows });
+    return res.status(200).json({ success: true, data: Array.isArray(rows) ? rows : [] });
   } catch (err) {
     console.error('[skillController.getAll]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -23,7 +23,9 @@ async function getAll(req, res) {
 async function getOne(req, res) {
   try {
     const [rows] = await query('SELECT * FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
-    if (rows.length === 0) return res.status(404).json({ success: false, message: 'Skill not found.' });
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Skill not found.' });
+    }
     return res.status(200).json({ success: true, data: rows[0] });
   } catch (err) {
     console.error('[skillController.getOne]', err);
@@ -35,7 +37,8 @@ async function getOne(req, res) {
 async function getCategories(req, res) {
   try {
     const [rows] = await query('SELECT DISTINCT category FROM skills ORDER BY category ASC');
-    return res.status(200).json({ success: true, data: rows.map(r => r.category) });
+    const categories = Array.isArray(rows) ? rows.map(r => r.category) : [];
+    return res.status(200).json({ success: true, data: categories });
   } catch (err) {
     console.error('[skillController.getCategories]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -71,7 +74,9 @@ async function create(req, res) {
 async function update(req, res) {
   try {
     const [existing] = await query('SELECT id FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
-    if (existing.length === 0) return res.status(404).json({ success: false, message: 'Skill not found.' });
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Skill not found.' });
+    }
 
     const allowed = ['name','category','level','icon_url','sort_order'];
     const data = {};
@@ -102,7 +107,9 @@ async function update(req, res) {
 async function remove(req, res) {
   try {
     const [existing] = await query('SELECT id FROM skills WHERE id = ? LIMIT 1', [req.params.id]);
-    if (existing.length === 0) return res.status(404).json({ success: false, message: 'Skill not found.' });
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Skill not found.' });
+    }
 
     await query('DELETE FROM skills WHERE id = ?', [req.params.id]);
     return res.status(200).json({ success: true, message: 'Skill deleted.' });
@@ -112,4 +119,4 @@ async function remove(req, res) {
   }
 }
 
-module.exports = { getAll, getOne, getCategories, create, update, remove };
+module.exports = { getAll, getOne, getCategories, create, update, remove, getSkills: getAll };

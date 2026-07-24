@@ -8,13 +8,27 @@ const { query, buildSetClause } = require('../config/db');
 async function getProfile(req, res) {
   try {
     const [rows] = await query('SELECT * FROM profile WHERE id = 1 LIMIT 1');
-    if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Profile not found.' });
+
+    // Validasi aman jika data kosong / tidak ditemukan
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: null,
+        message: 'Data profile belum diatur.'
+      });
     }
-    return res.status(200).json({ success: true, data: rows[0] });
+
+    return res.status(200).json({
+      success: true,
+      data: rows[0]
+    });
   } catch (err) {
     console.error('[profileController.getProfile]', err);
-    return res.status(500).json({ success: false, message: 'Server error.' });
+    return res.status(500).json({
+      success: false,
+      message: 'Gagal mengambil data profil',
+      error: err.message
+    });
   }
 }
 
@@ -36,7 +50,7 @@ async function updateProfile(req, res) {
     if (req.file && req.fileType === 'photo') {
       // Delete old photo if exists
       const [oldRows] = await query('SELECT photo_url FROM profile WHERE id = 1 LIMIT 1');
-      if (oldRows.length && oldRows[0].photo_url) {
+      if (oldRows && oldRows.length && oldRows[0].photo_url) {
         const oldPath = path.join(__dirname, '..', oldRows[0].photo_url);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
       }
@@ -66,7 +80,7 @@ async function uploadPhoto(req, res) {
     }
 
     const [oldRows] = await query('SELECT photo_url FROM profile WHERE id = 1 LIMIT 1');
-    if (oldRows.length && oldRows[0].photo_url) {
+    if (oldRows && oldRows.length && oldRows[0].photo_url) {
       const oldPath = path.join(__dirname, '..', oldRows[0].photo_url);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
@@ -89,7 +103,7 @@ async function uploadCV(req, res) {
     }
 
     const [oldRows] = await query('SELECT cv_url FROM profile WHERE id = 1 LIMIT 1');
-    if (oldRows.length && oldRows[0].cv_url) {
+    if (oldRows && oldRows.length && oldRows[0].cv_url) {
       const oldPath = path.join(__dirname, '..', oldRows[0].cv_url);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }

@@ -6,7 +6,7 @@ const { query, buildSetClause } = require('../config/db');
 async function getAll(req, res) {
   try {
     const [rows] = await query('SELECT * FROM education ORDER BY sort_order ASC, start_year DESC');
-    return res.status(200).json({ success: true, data: rows });
+    return res.status(200).json({ success: true, data: Array.isArray(rows) ? rows : [] });
   } catch (err) {
     console.error('[educationController.getAll]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -17,7 +17,9 @@ async function getAll(req, res) {
 async function getOne(req, res) {
   try {
     const [rows] = await query('SELECT * FROM education WHERE id = ? LIMIT 1', [req.params.id]);
-    if (rows.length === 0) return res.status(404).json({ success: false, message: 'Education record not found.' });
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Education record not found.' });
+    }
     return res.status(200).json({ success: true, data: rows[0] });
   } catch (err) {
     console.error('[educationController.getOne]', err);
@@ -62,7 +64,9 @@ async function create(req, res) {
 async function update(req, res) {
   try {
     const [existing] = await query('SELECT id FROM education WHERE id = ? LIMIT 1', [req.params.id]);
-    if (existing.length === 0) return res.status(404).json({ success: false, message: 'Education record not found.' });
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Education record not found.' });
+    }
 
     const allowed = ['institution','degree','field_of_study','start_year','end_year','is_current','gpa','description','sort_order'];
     const data = {};
@@ -85,7 +89,9 @@ async function update(req, res) {
 async function remove(req, res) {
   try {
     const [existing] = await query('SELECT id FROM education WHERE id = ? LIMIT 1', [req.params.id]);
-    if (existing.length === 0) return res.status(404).json({ success: false, message: 'Education record not found.' });
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Education record not found.' });
+    }
 
     await query('DELETE FROM education WHERE id = ?', [req.params.id]);
     return res.status(200).json({ success: true, message: 'Education record deleted.' });

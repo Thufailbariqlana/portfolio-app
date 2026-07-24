@@ -1,9 +1,8 @@
 'use strict';
 
 const nodemailer = require('nodemailer');
-const { query, buildSetClause } = require('../config/db');
+const { query } = require('../config/db');
 
-// ── Email transporter (optional — only used if SMTP_HOST is set) ──────────────
 function getTransporter() {
   if (!process.env.SMTP_HOST) return null;
   return nodemailer.createTransport({
@@ -17,16 +16,17 @@ function getTransporter() {
   });
 }
 
-// ── POST /api/contacts  (Public — visitor submits contact form) ───────────────
+// ── POST /api/contacts ────────────────────────────────────────────────────────
 async function submit(req, res) {
   try {
-    const { sender_name, sender_email, subject, message } = req.body;
+    const sender_name = req.body.sender_name || req.body.name;
+    const sender_email = req.body.sender_email || req.body.email;
+    const { subject, message } = req.body;
 
     if (!sender_name || !sender_email || !message) {
-      return res.status(400).json({ success: false, message: 'sender_name, sender_email, and message are required.' });
+      return res.status(400).json({ success: false, message: 'Name, email, and message are required.' });
     }
 
-    // Basic email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(sender_email)) {
       return res.status(400).json({ success: false, message: 'Invalid email address.' });
@@ -37,7 +37,6 @@ async function submit(req, res) {
       [sender_name.trim(), sender_email.trim(), (subject || '').trim(), message.trim()]
     );
 
-    // Send notification email (fire-and-forget — do not await)
     const transporter = getTransporter();
     if (transporter && process.env.NOTIFY_EMAIL) {
       transporter.sendMail({
@@ -56,7 +55,7 @@ async function submit(req, res) {
   }
 }
 
-// ── GET /api/contacts  (Admin only) ──────────────────────────────────────────
+// ── GET /api/contacts ─────────────────────────────────────────────────────────
 async function getAll(req, res) {
   try {
     const { unread } = req.query;
@@ -66,13 +65,14 @@ async function getAll(req, res) {
     sql += ' ORDER BY created_at DESC';
 
     const [rows] = await query(sql, params);
-
-    // Count unread
     const [countRows] = await query('SELECT COUNT(*) AS total FROM contacts WHERE is_read = 0');
+
+    const totalUnread = (countRows && countRows.length > 0) ? countRows[0].total : 0;
+
     return res.status(200).json({
       success: true,
-      data: rows,
-      unread_count: countRows[0].total
+      data: Array.isArray(rows) ? rows : [],
+      unread_count: totalUnread
     });
   } catch (err) {
     console.error('[contactController.getAll]', err);
@@ -80,13 +80,14 @@ async function getAll(req, res) {
   }
 }
 
-// ── GET /api/contacts/:id  (Admin only) ───────────────────────────────────────
+// ── GET /api/contacts/:id ─────────────────────────────────────────────────────
 async function getOne(req, res) {
   try {
     const [rows] = await query('SELECT * FROM contacts WHERE id = ? LIMIT 1', [req.params.id]);
-    if (rows.length === 0) return res.status(404).json({ success: false, message: 'Contact message not found.' });
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Contact message not found.' });
+    }
 
-    // Auto-mark as read when opened
     if (!rows[0].is_read) {
       await query('UPDATE contacts SET is_read = 1 WHERE id = ?', [req.params.id]);
       rows[0].is_read = 1;
@@ -99,14 +100,15 @@ async function getOne(req, res) {
   }
 }
 
-// ── PATCH /api/contacts/:id/read  (Admin — mark read/unread) ─────────────────
+// ── PATCH /api/contacts/:id/read ──────────────────────────────────────────────
 async function markRead(req, res) {
   try {
-    const { is_read } = req.body;
-    if (is_read === undefined) return res.status(400).json({ success: false, message: 'is_read (0 or 1) is required.' });
+    const is_read = req.body.is_read !== undefined ? req.body.is_read : 1;
 
     const [existing] = await query('SELECT id FROM contacts WHERE id = ? LIMIT 1', [req.params.id]);
-    if (existing.length === 0) return res.status(404).json({ success: false, message: 'Contact message not found.' });
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Contact message not found.' });
+    }
 
     await query('UPDATE contacts SET is_read = ? WHERE id = ?', [is_read ? 1 : 0, req.params.id]);
     return res.status(200).json({ success: true, message: `Marked as ${is_read ? 'read' : 'unread'}.` });
@@ -116,11 +118,13 @@ async function markRead(req, res) {
   }
 }
 
-// ── DELETE /api/contacts/:id  (Admin only) ────────────────────────────────────
+// ── DELETE /api/contacts/:id ──────────────────────────────────────────────────
 async function remove(req, res) {
   try {
     const [existing] = await query('SELECT id FROM contacts WHERE id = ? LIMIT 1', [req.params.id]);
-    if (existing.length === 0) return res.status(404).json({ success: false, message: 'Contact message not found.' });
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Contact message not found.' });
+    }
 
     await query('DELETE FROM contacts WHERE id = ?', [req.params.id]);
     return res.status(200).json({ success: true, message: 'Message deleted.' });
@@ -130,4 +134,4 @@ async function remove(req, res) {
   }
 }
 
-module.exports = { submit, getAll, getOne, markRead, remove };
+module.exports = { submit, getAll, getOne, markRead, remove, createContact: submit, getContacts: getAll, markAsRead: markRead, deleteContact: remove };
