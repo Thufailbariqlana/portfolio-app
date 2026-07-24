@@ -5,7 +5,7 @@ const { query, buildSetClause } = require('../config/db');
 // ── GET /api/experiences ──────────────────────────────────────────────────────
 async function getAll(req, res) {
   try {
-    const [rows] = await query('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC');
+    const rows = await query('SELECT * FROM experiences ORDER BY sort_order ASC, start_date DESC');
     return res.status(200).json({ success: true, data: Array.isArray(rows) ? rows : [] });
   } catch (err) {
     console.error('[experienceController.getAll]', err);
@@ -16,7 +16,7 @@ async function getAll(req, res) {
 // ── GET /api/experiences/:id ──────────────────────────────────────────────────
 async function getOne(req, res) {
   try {
-    const [rows] = await query('SELECT * FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
+    const rows = await query('SELECT * FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
     if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Experience not found.' });
     }
@@ -36,7 +36,8 @@ async function create(req, res) {
       return res.status(400).json({ success: false, message: 'company, position, and start_date are required.' });
     }
 
-    const [result] = await query(
+    // Di sini perubahannya: 'result' langsung berupa object ResultSetHeader dari MySQL
+    const result = await query(
       `INSERT INTO experiences (company, position, location, start_date, end_date, is_current, description, tech_stack, sort_order)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -52,8 +53,13 @@ async function create(req, res) {
       ]
     );
 
-    const [created] = await query('SELECT * FROM experiences WHERE id = ? LIMIT 1', [result.insertId]);
-    return res.status(201).json({ success: true, message: 'Experience created.', data: created[0] });
+    // Ambil insertId langsung dari result
+    const created = await query('SELECT * FROM experiences WHERE id = ? LIMIT 1', [result.insertId]);
+    return res.status(201).json({ 
+      success: true, 
+      message: 'Experience created.', 
+      data: Array.isArray(created) ? created[0] : null 
+    });
   } catch (err) {
     console.error('[experienceController.create]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -63,7 +69,7 @@ async function create(req, res) {
 // ── PUT /api/experiences/:id ──────────────────────────────────────────────────
 async function update(req, res) {
   try {
-    const [existing] = await query('SELECT id FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT id FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Experience not found.' });
     }
@@ -77,8 +83,12 @@ async function update(req, res) {
     const { clause, values } = buildSetClause(data);
     await query(`UPDATE experiences SET ${clause} WHERE id = ?`, [...values, req.params.id]);
 
-    const [updated] = await query('SELECT * FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
-    return res.status(200).json({ success: true, message: 'Experience updated.', data: updated[0] });
+    const updated = await query('SELECT * FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Experience updated.', 
+      data: Array.isArray(updated) ? updated[0] : null 
+    });
   } catch (err) {
     console.error('[experienceController.update]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -88,7 +98,7 @@ async function update(req, res) {
 // ── DELETE /api/experiences/:id ───────────────────────────────────────────────
 async function remove(req, res) {
   try {
-    const [existing] = await query('SELECT id FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT id FROM experiences WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Experience not found.' });
     }
