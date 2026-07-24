@@ -7,7 +7,7 @@ const { query, buildSetClause } = require('../config/db');
 // ── GET /api/certificates ─────────────────────────────────────────────────────
 async function getAll(req, res) {
   try {
-    const [rows] = await query('SELECT * FROM certificates ORDER BY sort_order ASC, issue_date DESC');
+    const rows = await query('SELECT * FROM certificates ORDER BY sort_order ASC, issue_date DESC');
     return res.status(200).json({ success: true, data: Array.isArray(rows) ? rows : [] });
   } catch (err) {
     console.error('[certificateController.getAll]', err);
@@ -18,7 +18,7 @@ async function getAll(req, res) {
 // ── GET /api/certificates/:id ─────────────────────────────────────────────────
 async function getOne(req, res) {
   try {
-    const [rows] = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
+    const rows = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
     if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Certificate not found.' });
     }
@@ -40,7 +40,7 @@ async function create(req, res) {
 
     const image_url = req.file ? `/uploads/certificates/${req.file.filename}` : '';
 
-    const [result] = await query(
+    const result = await query(
       `INSERT INTO certificates (name, issuer, issue_date, expiry_date, credential_id, credential_url, image_url, sort_order)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -55,8 +55,12 @@ async function create(req, res) {
       ]
     );
 
-    const [created] = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [result.insertId]);
-    return res.status(201).json({ success: true, message: 'Certificate created.', data: created[0] });
+    const created = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [result.insertId]);
+    return res.status(201).json({ 
+      success: true, 
+      message: 'Certificate created.', 
+      data: Array.isArray(created) ? created[0] : null 
+    });
   } catch (err) {
     console.error('[certificateController.create]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -66,7 +70,7 @@ async function create(req, res) {
 // ── PUT /api/certificates/:id ─────────────────────────────────────────────────
 async function update(req, res) {
   try {
-    const [existing] = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Certificate not found.' });
     }
@@ -88,8 +92,12 @@ async function update(req, res) {
     const { clause, values } = buildSetClause(data);
     await query(`UPDATE certificates SET ${clause} WHERE id = ?`, [...values, req.params.id]);
 
-    const [updated] = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
-    return res.status(200).json({ success: true, message: 'Certificate updated.', data: updated[0] });
+    const updated = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Certificate updated.', 
+      data: Array.isArray(updated) ? updated[0] : null 
+    });
   } catch (err) {
     console.error('[certificateController.update]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -99,7 +107,7 @@ async function update(req, res) {
 // ── DELETE /api/certificates/:id ──────────────────────────────────────────────
 async function remove(req, res) {
   try {
-    const [existing] = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Certificate not found.' });
     }

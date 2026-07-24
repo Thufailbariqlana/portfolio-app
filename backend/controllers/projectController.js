@@ -9,7 +9,7 @@ const { query, buildSetClause } = require('../config/db');
 async function getAll(req, res) {
   try {
     const { featured, category } = req.query;
-    let sql    = 'SELECT * FROM projects';
+    let sql      = 'SELECT * FROM projects';
     const params = [];
     const conditions = [];
 
@@ -18,7 +18,7 @@ async function getAll(req, res) {
     if (conditions.length)   { sql += ' WHERE ' + conditions.join(' AND '); }
     sql += ' ORDER BY sort_order ASC, created_at DESC';
 
-    const [rows] = await query(sql, params);
+    const rows = await query(sql, params);
     return res.status(200).json({ success: true, data: Array.isArray(rows) ? rows : [] });
   } catch (err) {
     console.error('[projectController.getAll]', err);
@@ -35,7 +35,7 @@ async function getOne(req, res) {
       ? 'SELECT * FROM projects WHERE id = ? LIMIT 1'
       : 'SELECT * FROM projects WHERE slug = ? LIMIT 1';
 
-    const [rows] = await query(sql, [param]);
+    const rows = await query(sql, [param]);
     if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Project not found.' });
     }
@@ -59,14 +59,14 @@ async function create(req, res) {
 
     const slug = slugify(title, { lower: true, strict: true, trim: true });
 
-    const [slugCheck] = await query('SELECT id FROM projects WHERE slug = ? LIMIT 1', [slug]);
-    if (slugCheck && slugCheck.length > 0) {
+    const slugCheck = await query('SELECT id FROM projects WHERE slug = ? LIMIT 1', [slug]);
+    if (Array.isArray(slugCheck) && slugCheck.length > 0) {
       return res.status(409).json({ success: false, message: `Slug "${slug}" already exists. Use a different title.` });
     }
 
     const image_url = req.file ? `/uploads/projects/${req.file.filename}` : '';
 
-    const [result] = await query(
+    const result = await query(
       `INSERT INTO projects (title, slug, short_desc, description, image_url, demo_url, repo_url, tech_stack, category, metric_users, metric_perf, metric_custom, is_featured, sort_order)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -87,8 +87,12 @@ async function create(req, res) {
       ]
     );
 
-    const [created] = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [result.insertId]);
-    return res.status(201).json({ success: true, message: 'Project created.', data: created[0] });
+    const created = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [result.insertId]);
+    return res.status(201).json({ 
+      success: true, 
+      message: 'Project created.', 
+      data: Array.isArray(created) ? created[0] : null 
+    });
   } catch (err) {
     console.error('[projectController.create]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -98,7 +102,7 @@ async function create(req, res) {
 // ── PUT /api/projects/:id ─────────────────────────────────────────────────────
 async function update(req, res) {
   try {
-    const [existing] = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Project not found.' });
     }
@@ -113,8 +117,8 @@ async function update(req, res) {
 
     if (data.title && data.title !== existing[0].title) {
       data.slug = slugify(data.title, { lower: true, strict: true, trim: true });
-      const [slugCheck] = await query('SELECT id FROM projects WHERE slug = ? AND id != ? LIMIT 1', [data.slug, req.params.id]);
-      if (slugCheck && slugCheck.length > 0) {
+      const slugCheck = await query('SELECT id FROM projects WHERE slug = ? AND id != ? LIMIT 1', [data.slug, req.params.id]);
+      if (Array.isArray(slugCheck) && slugCheck.length > 0) {
         return res.status(409).json({ success: false, message: `Slug "${data.slug}" already exists.` });
       }
     }
@@ -132,8 +136,12 @@ async function update(req, res) {
     const { clause, values } = buildSetClause(data);
     await query(`UPDATE projects SET ${clause} WHERE id = ?`, [...values, req.params.id]);
 
-    const [updated] = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [req.params.id]);
-    return res.status(200).json({ success: true, message: 'Project updated.', data: updated[0] });
+    const updated = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [req.params.id]);
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Project updated.', 
+      data: Array.isArray(updated) ? updated[0] : null 
+    });
   } catch (err) {
     console.error('[projectController.update]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -143,7 +151,7 @@ async function update(req, res) {
 // ── DELETE /api/projects/:id ──────────────────────────────────────────────────
 async function remove(req, res) {
   try {
-    const [existing] = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Project not found.' });
     }
