@@ -18,7 +18,7 @@
 const PortfolioConfig = (() => {
   // ── Your Render backend URL (no trailing slash) ──────────────
   // Example: 'https://portfolio-api-xxxx.onrender.com'
-  const PROD_API  = 'https://YOUR-RENDER-APP-NAME.onrender.com';
+  const PROD_API  = 'https://portfolio-app-khaki-mu.vercel.app';
 
   // ── Local development backend ─────────────────────────────────
   const LOCAL_API = 'http://localhost:5000';
