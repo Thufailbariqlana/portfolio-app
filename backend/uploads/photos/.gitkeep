@@ -1,0 +1,5 @@
+# Mengabaikan semua isi folder uploads
+uploads/*
+
+# TETAP melacak file .gitkeep agar struktur folder tidak hilang di GitHub
+!uploads/**/.gitkeep

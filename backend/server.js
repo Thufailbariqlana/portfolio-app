@@ -69,7 +69,7 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, message: 'Too many login attempts, please try again in 15 minutes.' }
 });
-app.use('/api/auth/', authLimiter);
+app.use('/api/auth', authLimiter);
 
 // ── Health Check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {

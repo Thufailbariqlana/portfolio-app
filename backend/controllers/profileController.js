@@ -4,13 +4,20 @@ const path = require('path');
 const fs   = require('fs');
 const { query, buildSetClause } = require('../config/db');
 
+// Helper untuk memastikan record id = 1 selalu ada
+async function ensureProfileExists() {
+  const rows = await query('SELECT id FROM profile WHERE id = 1 LIMIT 1');
+  if (!rows || rows.length === 0) {
+    await query('INSERT INTO profile (id) VALUES (1)');
+  }
+}
+
 // ── GET /api/profile ──────────────────────────────────────────────────────────
 async function getProfile(req, res) {
   try {
-    const [rows] = await query('SELECT * FROM profile WHERE id = 1 LIMIT 1');
+    const rows = await query('SELECT * FROM profile WHERE id = 1 LIMIT 1');
 
-    // Validasi aman jika data kosong / tidak ditemukan
-    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+    if (!rows || rows.length === 0) {
       return res.status(200).json({
         success: true,
         data: null,
@@ -35,10 +42,13 @@ async function getProfile(req, res) {
 // ── PUT /api/profile ──────────────────────────────────────────────────────────
 async function updateProfile(req, res) {
   try {
+    // Pastikan baris id = 1 sudah ada sebelum update
+    await ensureProfileExists();
+
     const allowed = [
-      'full_name','title','bio','email','phone','location',
-      'website','github_url','linkedin_url','twitter_url',
-      'years_of_exp','open_to_work'
+      'full_name', 'title', 'bio', 'email', 'phone', 'location',
+      'website', 'github_url', 'linkedin_url', 'twitter_url',
+      'years_of_exp', 'open_to_work'
     ];
 
     const data = {};
@@ -48,8 +58,7 @@ async function updateProfile(req, res) {
 
     // Handle photo upload
     if (req.file && req.fileType === 'photo') {
-      // Delete old photo if exists
-      const [oldRows] = await query('SELECT photo_url FROM profile WHERE id = 1 LIMIT 1');
+      const oldRows = await query('SELECT photo_url FROM profile WHERE id = 1 LIMIT 1');
       if (oldRows && oldRows.length && oldRows[0].photo_url) {
         const oldPath = path.join(__dirname, '..', oldRows[0].photo_url);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -64,11 +73,15 @@ async function updateProfile(req, res) {
     const { clause, values } = buildSetClause(data);
     await query(`UPDATE profile SET ${clause} WHERE id = 1`, values);
 
-    const [updated] = await query('SELECT * FROM profile WHERE id = 1 LIMIT 1');
-    return res.status(200).json({ success: true, message: 'Profile updated.', data: updated[0] });
+    const updated = await query('SELECT * FROM profile WHERE id = 1 LIMIT 1');
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated.',
+      data: updated[0]
+    });
   } catch (err) {
     console.error('[profileController.updateProfile]', err);
-    return res.status(500).json({ success: false, message: 'Server error.' });
+    return res.status(500).json({ success: false, message: 'Server error.', error: err.message });
   }
 }
 
@@ -79,7 +92,9 @@ async function uploadPhoto(req, res) {
       return res.status(400).json({ success: false, message: 'No photo file provided.' });
     }
 
-    const [oldRows] = await query('SELECT photo_url FROM profile WHERE id = 1 LIMIT 1');
+    await ensureProfileExists();
+
+    const oldRows = await query('SELECT photo_url FROM profile WHERE id = 1 LIMIT 1');
     if (oldRows && oldRows.length && oldRows[0].photo_url) {
       const oldPath = path.join(__dirname, '..', oldRows[0].photo_url);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -91,7 +106,7 @@ async function uploadPhoto(req, res) {
     return res.status(200).json({ success: true, message: 'Photo uploaded.', data: { photo_url } });
   } catch (err) {
     console.error('[profileController.uploadPhoto]', err);
-    return res.status(500).json({ success: false, message: 'Server error.' });
+    return res.status(500).json({ success: false, message: 'Server error.', error: err.message });
   }
 }
 
@@ -102,7 +117,9 @@ async function uploadCV(req, res) {
       return res.status(400).json({ success: false, message: 'No CV file provided.' });
     }
 
-    const [oldRows] = await query('SELECT cv_url FROM profile WHERE id = 1 LIMIT 1');
+    await ensureProfileExists();
+
+    const oldRows = await query('SELECT cv_url FROM profile WHERE id = 1 LIMIT 1');
     if (oldRows && oldRows.length && oldRows[0].cv_url) {
       const oldPath = path.join(__dirname, '..', oldRows[0].cv_url);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -114,7 +131,7 @@ async function uploadCV(req, res) {
     return res.status(200).json({ success: true, message: 'CV uploaded.', data: { cv_url } });
   } catch (err) {
     console.error('[profileController.uploadCV]', err);
-    return res.status(500).json({ success: false, message: 'Server error.' });
+    return res.status(500).json({ success: false, message: 'Server error.', error: err.message });
   }
 }
 
