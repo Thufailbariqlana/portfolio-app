@@ -30,14 +30,13 @@ async function getOne(req, res) {
 // ── POST /api/certificates ────────────────────────────────────────────────────
 async function create(req, res) {
   try {
-    const { name, issuer, issue_date, expiry_date, credential_id, credential_url, sort_order } = req.body;
+    const { name, issuer, issue_date, expiry_date, credential_id, credential_url, sort_order } = req.body || {};
 
     if (!name || !issuer || !issue_date) {
       return res.status(400).json({ success: false, message: 'name, issuer, and issue_date are required.' });
     }
 
-    // Mengambil URL Cloudinary dari middleware upload (req.file.path / filename)
-    const image_url = req.file ? (req.file.path || req.file.secure_url || req.file.filename) : '';
+    const image_url = req.file ? (req.file.path || req.file.secure_url || req.file.filename || '') : '';
 
     const result = await query(
       `INSERT INTO certificates (name, issuer, issue_date, expiry_date, credential_id, credential_url, image_url, sort_order)
@@ -80,7 +79,7 @@ async function update(req, res) {
     const data = {};
     
     allowed.forEach(f => { 
-      if (req.body[f] !== undefined) {
+      if (req.body && req.body[f] !== undefined) {
         data[f] = req.body[f]; 
       }
     });

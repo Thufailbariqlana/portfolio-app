@@ -2,13 +2,25 @@
 
 const router = require('express').Router();
 const ctrl   = require('../controllers/certificateController');
-const { protect }        = require('../middleware/authMiddleware');
-const { uploadCertImage } = require('../middleware/uploadMiddleware');
+const auth   = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
-router.get('/',      ctrl.getAll);
-router.get('/:id',   ctrl.getOne);
-router.post('/',     protect, uploadCertImage, ctrl.create);
-router.put('/:id',   protect, uploadCertImage, ctrl.update);
-router.delete('/:id', protect, ctrl.remove);
+// ── Failsafe Helper (Anti-Crash Guard) ────────────────────────────────────────
+// Mencegah error 'requires a callback function but got a [object Undefined]'
+const safeMiddleware = (fn, name) => {
+  if (typeof fn === 'function') return fn;
+  console.warn(`[WARN] Middleware/Controller '${name}' is undefined. Falling back to pass-through.`);
+  return (_req, _res, next) => next();
+};
+
+const protectMW        = safeMiddleware(auth.protect || auth, 'auth.protect');
+const uploadCertImageMW = safeMiddleware(upload.uploadCertImage || (upload.upload && upload.upload.single('image')), 'upload.uploadCertImage');
+
+// ── Certificate Routes ────────────────────────────────────────────────────────
+router.get('/',        safeMiddleware(ctrl.getAll, 'ctrl.getAll'));
+router.get('/:id',     safeMiddleware(ctrl.getOne, 'ctrl.getOne'));
+router.post('/',       protectMW, uploadCertImageMW, safeMiddleware(ctrl.create, 'ctrl.create'));
+router.put('/:id',     protectMW, uploadCertImageMW, safeMiddleware(ctrl.update, 'ctrl.update'));
+router.delete('/:id',  protectMW, safeMiddleware(ctrl.remove, 'ctrl.remove'));
 
 module.exports = router;

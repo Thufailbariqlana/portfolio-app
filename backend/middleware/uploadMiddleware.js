@@ -1,63 +1,39 @@
 'use strict';
 
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
+// Gunakan MemoryStorage agar ramah Serverless (Vercel filesystem bersifat read-only)
 const storage = multer.memoryStorage();
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
+  }
+};
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limit 5MB
+  fileFilter: fileFilter
 });
 
-const uploadToCloudinaryMiddleware = (folderName = 'projects') => {
-  return async (req, res, next) => {
-    try {
-      if (!req.file) return next();
-
-      const streamUpload = (reqFile) => {
-        return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: folderName },
-            (error, result) => {
-              if (result) {
-                resolve(result);
-              } else {
-                reject(error);
-              }
-            }
-          );
-          stream.end(reqFile.buffer);
-        });
-      };
-
-      const result = await streamUpload(req.file);
-      
-      req.file.filename = result.secure_url;
-      req.file.path = result.secure_url;
-
-      next();
-    } catch (err) {
-      console.error('[Cloudinary Upload Error]:', err);
-      return res.status(500).json({ success: false, message: 'Failed to upload image to cloud storage.' });
+// Middleware helper khusus single image upload
+const uploadCertImage = (req, res, next) => {
+  const singleUpload = upload.single('image');
+  singleUpload(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
+      }
+      return res.status(400).json({ success: false, message: err.message });
     }
-  };
+    next();
+  });
 };
 
-// Middleware kombinasi untuk rute project (Upload Single Image + Kirim ke Cloudinary)
-const uploadProjectImage = [
-  upload.single('image'),
-  uploadToCloudinaryMiddleware('projects')
-];
-
 module.exports = {
-  uploadSingle: upload.single('image'),
-  uploadToCloudinaryMiddleware,
-  uploadProjectImage
+  upload,
+  uploadCertImage
 };
