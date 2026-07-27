@@ -1,33 +1,128 @@
 'use strict';
 
 /* ================================================================
-   PORTFOLIO MAIN — main.js
-   Fetches all data from the backend API and renders each section.
-
-   API_URL is resolved dynamically from config.js:
-     • Local  → http://localhost:5000/api
-     • Prod   → https://YOUR-RENDER-APP-NAME.onrender.com/api
+   PORTFOLIO MAIN — main.js  v2.0
+   Features:
+   - Dynamic project category tabs (All + per-category)
+   - Language toggle (EN / ID) with full i18n
+   - Theme toggle (dark / light)
+   - Social media icons (hero, footer, mobile nav, contact)
+   - Back-to-top button
+   - Cloudinary-safe image URLs (no BASE prefix)
    ================================================================ */
 
-// PortfolioConfig is loaded by config.js (included BEFORE this file in index.html)
+// ── Config ───────────────────────────────────────────────────────
 const API  = PortfolioConfig.API;
-const BASE = PortfolioConfig.BASE;
+const BASE = PortfolioConfig.BASE; // kept for non-Cloudinary fallback
 
-// ── Utility ───────────────────────────────────────────────────────────────────
+// ── i18n Strings ─────────────────────────────────────────────────
+const i18n = {
+  en: {
+    'nav.about':        'About',
+    'nav.experience':   'Experience',
+    'nav.projects':     'Projects',
+    'nav.skills':       'Skills',
+    'nav.education':    'Education',
+    'nav.certificates': 'Certificates',
+    'nav.contact':      'Contact',
+    'hero.openToWork':  'Open to Work',
+    'hero.viewWork':    'View My Work',
+    'hero.downloadCV':  'Download CV',
+    'hero.yearsExp':    'Years Exp.',
+    'hero.projects':    'Projects',
+    'hero.certs':       'Certs',
+    'section.about':        'About Me',
+    'section.aboutSub':     'A bit more about who I am',
+    'section.experience':   'Work Experience',
+    'section.experienceSub':'My professional journey',
+    'section.projects':     'Projects',
+    'section.projectsSub':  "Things I've built",
+    'section.skills':       'Skills',
+    'section.skillsSub':    'Technologies I work with',
+    'section.education':    'Education',
+    'section.educationSub': 'Academic background',
+    'section.certificates': 'Certificates',
+    'section.certificatesSub': 'Professional certifications',
+    'section.contact':      'Get In Touch',
+    'section.contactSub':   "Have a project in mind? Let's talk.",
+    'projects.all':     'All',
+    'projects.empty':   'No projects found.',
+    'contact.name':     'Full Name *',
+    'contact.email':    'Email Address *',
+    'contact.subject':  'Subject',
+    'contact.message':  'Message *',
+    'contact.send':     'Send Message',
+    'contact.success':  "Message sent! I'll get back to you soon.",
+    'contact.errName':  'Name is required.',
+    'contact.errEmail': 'Valid email is required.',
+    'contact.errMsg':   'Message is required.',
+    'exp.present':      'Present',
+    'exp.location':     'Location',
+    'no.data':          'No data added yet.',
+  },
+  id: {
+    'nav.about':        'Tentang',
+    'nav.experience':   'Pengalaman',
+    'nav.projects':     'Proyek',
+    'nav.skills':       'Keahlian',
+    'nav.education':    'Pendidikan',
+    'nav.certificates': 'Sertifikat',
+    'nav.contact':      'Kontak',
+    'hero.openToWork':  'Terbuka untuk Bekerja',
+    'hero.viewWork':    'Lihat Proyek Saya',
+    'hero.downloadCV':  'Unduh CV',
+    'hero.yearsExp':    'Thn. Pengalaman',
+    'hero.projects':    'Proyek',
+    'hero.certs':       'Sertifikat',
+    'section.about':        'Tentang Saya',
+    'section.aboutSub':     'Sedikit lebih banyak tentang saya',
+    'section.experience':   'Pengalaman Kerja',
+    'section.experienceSub':'Perjalanan profesional saya',
+    'section.projects':     'Proyek',
+    'section.projectsSub':  'Hal-hal yang telah saya bangun',
+    'section.skills':       'Keahlian',
+    'section.skillsSub':    'Teknologi yang saya gunakan',
+    'section.education':    'Pendidikan',
+    'section.educationSub': 'Latar belakang akademik',
+    'section.certificates': 'Sertifikat',
+    'section.certificatesSub': 'Sertifikasi profesional',
+    'section.contact':      'Hubungi Saya',
+    'section.contactSub':   'Punya proyek? Mari bicara.',
+    'projects.all':     'Semua',
+    'projects.empty':   'Tidak ada proyek ditemukan.',
+    'contact.name':     'Nama Lengkap *',
+    'contact.email':    'Alamat Email *',
+    'contact.subject':  'Subjek',
+    'contact.message':  'Pesan *',
+    'contact.send':     'Kirim Pesan',
+    'contact.success':  'Pesan terkirim! Saya akan segera merespons.',
+    'contact.errName':  'Nama wajib diisi.',
+    'contact.errEmail': 'Email yang valid diperlukan.',
+    'contact.errMsg':   'Pesan wajib diisi.',
+    'exp.present':      'Sekarang',
+    'exp.location':     'Lokasi',
+    'no.data':          'Belum ada data.',
+  }
+};
+
+let currentLang  = localStorage.getItem('portfolio_lang')  || 'en';
+let currentTheme = localStorage.getItem('portfolio_theme') || 'dark';
+
+// ── Utility ───────────────────────────────────────────────────────
+function t(key) { return (i18n[currentLang] || i18n.en)[key] || key; }
+
 function escHtml(str) {
   return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
 function fmtDate(dateStr) {
   if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+  return new Date(dateStr).toLocaleDateString(currentLang === 'id' ? 'id-ID' : 'en-US',
+    { year: 'numeric', month: 'short' });
 }
-
 function fmtYear(dateStr) {
   if (!dateStr) return '';
   return new Date(dateStr).getFullYear();
 }
-
 async function fetchJson(endpoint) {
   try {
     const res = await fetch(`${API}${endpoint}`);
@@ -39,66 +134,155 @@ async function fetchJson(endpoint) {
     return null;
   }
 }
+function show(id) { const el = document.getElementById(id); if (el) el.style.display = ''; }
+function hide(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
 
-function show(id)  { const el = document.getElementById(id); if (el) el.style.display = ''; }
-function hide(id)  { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+// ── Apply i18n to DOM ─────────────────────────────────────────────
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    const val = t(key);
+    if (val) el.textContent = val;
+  });
+  // Update html lang attr
+  document.documentElement.lang = currentLang === 'id' ? 'id' : 'en';
+  // Update lang button label
+  const langLabel = document.getElementById('langLabel');
+  if (langLabel) langLabel.textContent = currentLang.toUpperCase();
+  // Re-render filter tabs with new "All" translation
+  rebuildProjectTabs();
+}
 
-// ════════════════════════════════════════════════════════════════
-//  NAVBAR
-// ════════════════════════════════════════════════════════════════
+// ── Theme Toggle ──────────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const moon = document.getElementById('iconMoon');
+  const sun  = document.getElementById('iconSun');
+  if (theme === 'light') {
+    moon?.classList.add('hidden');
+    sun?.classList.remove('hidden');
+  } else {
+    moon?.classList.remove('hidden');
+    sun?.classList.add('hidden');
+  }
+}
+
+(function initTheme() {
+  applyTheme(currentTheme);
+  const btn = document.getElementById('themeToggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('portfolio_theme', currentTheme);
+    applyTheme(currentTheme);
+  });
+})();
+
+// ── Language Toggle ───────────────────────────────────────────────
+(function initLang() {
+  const btn = document.getElementById('langToggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    currentLang = currentLang === 'en' ? 'id' : 'en';
+    localStorage.setItem('portfolio_lang', currentLang);
+    applyI18n();
+    // Re-render dynamic content
+    if (allProjects.length) renderProjects(
+      currentFilter === 'All' || currentFilter === 'Semua' || currentFilter === t('projects.all')
+        ? allProjects
+        : allProjects.filter(p => p.category === currentFilter)
+    );
+  });
+})();
+
+// ── Navbar ────────────────────────────────────────────────────────
 (function initNavbar() {
   const navbar = document.getElementById('navbar');
+  const backTop = document.getElementById('backTop');
 
-  // Scroll → add shadow
   window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 30);
+    const scrolled = window.scrollY > 60;
+    navbar?.classList.toggle('scrolled', scrolled);
+    backTop?.classList.toggle('visible', window.scrollY > 400);
   }, { passive: true });
 
-  // Active link highlight based on scroll position
-  const sections = document.querySelectorAll('section[id]');
-  const navLinks  = document.querySelectorAll('.nav-links a[data-nav]');
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        navLinks.forEach(l => l.classList.remove('active'));
-        const active = document.querySelector(`.nav-links a[data-nav="${entry.target.id}"]`);
-        if (active) active.classList.add('active');
+  // Active nav link on scroll
+  const sections = ['about','experience','projects','skills','education','certificates','contact'];
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        document.querySelectorAll('.nav-links a').forEach(a => {
+          a.classList.toggle('active', a.dataset.nav === e.target.id);
+        });
       }
     });
-  }, { threshold: 0.4 });
+  }, { threshold: 0.3 });
+  sections.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el); });
 
-  sections.forEach(s => observer.observe(s));
+  // Hamburger
+  const btn   = document.getElementById('hamburgerBtn');
+  const nav   = document.getElementById('mobileNav');
+  const close = document.getElementById('mobileNavClose');
+  btn?.addEventListener('click', () => nav?.classList.add('open'));
+  close?.addEventListener('click', closeMobileNav);
 
-  // Hamburger (mobile)
-  const btn = document.getElementById('hamburgerBtn');
-  const nav = document.getElementById('mobileNav');
-  btn.addEventListener('click', () => nav.classList.toggle('open'));
+  // Back to top
+  backTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 })();
 
 function closeMobileNav() {
-  document.getElementById('mobileNav').classList.remove('open');
+  document.getElementById('mobileNav')?.classList.remove('open');
 }
 
-// ════════════════════════════════════════════════════════════════
-//  FADE-IN on scroll
-// ════════════════════════════════════════════════════════════════
+// ── Fade-in on scroll ─────────────────────────────────────────────
 (function initFadeIn() {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        observer.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.1 });
-
-  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
 })();
 
-// ════════════════════════════════════════════════════════════════
-//  PROFILE — Hero + About + Navbar brand + Footer
-// ════════════════════════════════════════════════════════════════
+// ── Social Icons (SVG helpers) ────────────────────────────────────
+function ghIcon()   { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.373 0 12c0 5.303 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.298 24 12c0-6.627-5.373-12-12-12z"/></svg>`; }
+function liIcon()   { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`; }
+function igIcon()   { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>`; }
+function twIcon()   { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 0 1-2.825.775 4.958 4.958 0 0 0 2.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 0 0-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 0 0-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 0 1-2.228-.616v.06a4.923 4.923 0 0 0 3.946 4.827 4.996 4.996 0 0 1-2.212.085 4.936 4.936 0 0 0 4.604 3.417 9.867 9.867 0 0 1-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 0 0 7.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0 0 24 4.59z"/></svg>`; }
+function fbIcon()   { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`; }
+function ytIcon()   { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>`; }
+
+// Social config — maps profile field to icon + platform name
+const SOCIALS = [
+  { field: 'github_url',   icon: ghIcon,   label: 'GitHub'    },
+  { field: 'linkedin_url', icon: liIcon,   label: 'LinkedIn'  },
+  { field: 'twitter_url',  icon: twIcon,   label: 'Twitter/X' },
+  { field: 'instagram_url',icon: igIcon,   label: 'Instagram' },
+  { field: 'facebook_url', icon: fbIcon,   label: 'Facebook'  },
+  { field: 'youtube_url',  icon: ytIcon,   label: 'YouTube'   },
+  { field: 'website',      icon: () => `<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`, label: 'Website' }
+];
+
+function buildSocialButtons(profile, className, size = 17) {
+  return SOCIALS
+    .filter(s => profile[s.field])
+    .map(s => `
+      <a href="${escHtml(profile[s.field])}" target="_blank" rel="noopener noreferrer"
+         class="${className}" title="${escHtml(s.label)}" aria-label="${escHtml(s.label)}">
+        ${s.icon(size)}
+      </a>`).join('');
+}
+
+// Other icons
+function locIcon()   { return `<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`; }
+function mailIcon()  { return `<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`; }
+function phoneIcon() { return `<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 17z"/></svg>`; }
+function expIcon()   { return `<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`; }
+function linkIcon()  { return `<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`; }
+
+// ── Profile ───────────────────────────────────────────────────────
 async function loadProfile() {
   const p = await fetchJson('/profile');
   if (!p) return;
@@ -108,48 +292,39 @@ async function loadProfile() {
   const metaDesc = document.getElementById('metaDesc');
   if (metaDesc) metaDesc.content = p.bio || '';
   const ogTitle  = document.getElementById('ogTitle');
-  if (ogTitle) ogTitle.content = `${p.full_name} — ${p.title}`;
+  if (ogTitle)  ogTitle.content  = `${p.full_name} — ${p.title}`;
   const ogDesc   = document.getElementById('ogDesc');
-  if (ogDesc) ogDesc.content = p.bio || '';
+  if (ogDesc)   ogDesc.content   = p.bio || '';
 
-  // ── Hero ─────────────────────────────────────────────────────
+  // ── Hero ───────────────────────────────────────────────────────
   const firstName = (p.full_name || '').split(' ')[0];
-  setText('heroFirstName', firstName || 'Your Name');
-  setText('heroName', `Hi, I'm `); // reset and rebuild below
-  // Rebuild hero name with accent span
   const heroNameEl = document.getElementById('heroName');
   if (heroNameEl) {
     heroNameEl.innerHTML = `Hi, I'm <span class="accent">${escHtml(p.full_name || 'Your Name')}</span>`;
   }
   setText('heroTitle', p.title || '');
-  setText('heroBio', p.bio || '');
+  setText('heroBio',   p.bio   || '');
 
-  // Badge visibility
-  const badge = document.getElementById('heroBadge');
-  const badgeWrap = badge?.parentElement;
-  if (badgeWrap) {
-    badgeWrap.style.display = p.open_to_work ? '' : 'none';
-  }
+  // Badge
+  const badgeWrap = document.getElementById('heroBadge')?.parentElement;
+  if (badgeWrap) badgeWrap.style.display = p.open_to_work ? '' : 'none';
 
-  // Photo — Cloudinary menyimpan URL penuh, gunakan langsung
+  // Photo
   if (p.photo_url) {
     const img = document.getElementById('heroPhoto');
-    if (img) img.src = p.photo_url;
+    if (img) img.src = p.photo_url; // Cloudinary absolute URL
   }
 
-  // CV download button — Cloudinary URL sudah absolute
+  // CV
   if (p.cv_url) {
     const btn = document.getElementById('cvDownloadBtn');
-    if (btn) {
-      btn.href = p.cv_url;
-      btn.classList.remove('hidden');
-    }
+    if (btn) { btn.href = p.cv_url; btn.classList.remove('hidden'); }
   }
 
-  // Years of experience stat
+  // Stats
   setText('heroYears', (p.years_of_exp || '0') + '+');
 
-  // Navbar brand
+  // Nav brand / footer
   const nb = document.getElementById('navBrand');
   if (nb) nb.textContent = firstName || 'Dev';
   const fl = document.getElementById('footerName');
@@ -157,18 +332,35 @@ async function loadProfile() {
   const fc = document.getElementById('footerCopy');
   if (fc) fc.textContent = `© ${new Date().getFullYear()} ${p.full_name || ''} · Built with Node.js`;
 
+  // ── Hero social icons ─────────────────────────────────────────
+  const heroSocials = document.getElementById('heroSocials');
+  if (heroSocials) {
+    heroSocials.innerHTML = buildSocialButtons(p, 'hero-social-btn');
+  }
+
+  // ── Footer social icons ───────────────────────────────────────
+  const footerSocials = document.getElementById('footerSocials');
+  if (footerSocials) {
+    footerSocials.innerHTML = buildSocialButtons(p, 'footer-social-btn');
+  }
+
+  // ── Mobile nav social icons ───────────────────────────────────
+  const mobileNavSocials = document.getElementById('mobileNavSocials');
+  if (mobileNavSocials) {
+    mobileNavSocials.innerHTML = buildSocialButtons(p, 'hero-social-btn');
+  }
+
   // ── About section ─────────────────────────────────────────────
   setText('aboutBio', p.bio || '');
 
-  // Info list
   const infoList = document.getElementById('aboutInfoList');
   if (infoList) {
     const infos = [
-      { icon: locIcon(),  label: 'Location',  val: p.location  },
-      { icon: mailIcon(), label: 'Email',      val: p.email, href: `mailto:${p.email}` },
-      { icon: phoneIcon(),label: 'Phone',      val: p.phone  },
-      { icon: linkIcon(), label: 'Website',    val: p.website, href: p.website },
-      { icon: expIcon(),  label: 'Experience', val: p.years_of_exp ? `${p.years_of_exp} years` : '' },
+      { icon: locIcon(),   label: 'Location',   val: p.location },
+      { icon: mailIcon(),  label: 'Email',       val: p.email,   href: `mailto:${p.email}` },
+      { icon: phoneIcon(), label: 'Phone',       val: p.phone },
+      { icon: linkIcon(),  label: 'Website',     val: p.website, href: p.website },
+      { icon: expIcon(),   label: 'Experience',  val: p.years_of_exp ? `${p.years_of_exp} years` : '' },
     ].filter(i => i.val);
 
     infoList.innerHTML = infos.map(i => `
@@ -183,31 +375,25 @@ async function loadProfile() {
       </div>`).join('');
   }
 
-  // Social links
+  // About social links
   const aboutLinks = document.getElementById('aboutLinks');
   if (aboutLinks) {
-    const socials = [
-      { url: p.github_url,   label: 'GitHub' },
-      { url: p.linkedin_url, label: 'LinkedIn' },
-      { url: p.twitter_url,  label: 'Twitter' },
-      { url: p.website,      label: 'Website' },
-    ].filter(s => s.url);
-
-    aboutLinks.innerHTML = socials.map(s => `
-      <a href="${escHtml(s.url)}" target="_blank" class="about-link-btn">
-        ${escHtml(s.label)} ↗
-      </a>`).join('');
+    aboutLinks.innerHTML = SOCIALS
+      .filter(s => p[s.field])
+      .map(s => `
+        <a href="${escHtml(p[s.field])}" target="_blank" rel="noopener noreferrer" class="about-link-btn">
+          ${s.icon()} ${escHtml(s.label)} ↗
+        </a>`).join('');
   }
 
-  // Contact section info
+  // ── Contact info ───────────────────────────────────────────────
   const contactInfoList = document.getElementById('contactInfoList');
   if (contactInfoList) {
     const contacts = [
       { icon: mailIcon(),  label: 'Email',    val: p.email,    href: `mailto:${p.email}` },
       { icon: phoneIcon(), label: 'Phone',    val: p.phone,    href: `tel:${p.phone}` },
-      { icon: locIcon(),   label: 'Location', val: p.location  },
+      { icon: locIcon(),   label: 'Location', val: p.location },
     ].filter(c => c.val);
-
     contactInfoList.innerHTML = contacts.map(c => `
       <div class="contact-info-item">
         <div class="contact-info-icon">${c.icon}</div>
@@ -220,138 +406,141 @@ async function loadProfile() {
       </div>`).join('');
   }
 
-  // Social links in contact section
+  // Contact social icons
   const socialLinks = document.getElementById('socialLinks');
   if (socialLinks) {
-    const socials = [
-      { url: p.github_url,   label: 'GitHub',   icon: ghIcon() },
-      { url: p.linkedin_url, label: 'LinkedIn',  icon: liIcon() },
-      { url: p.twitter_url,  label: 'Twitter',   icon: twIcon() },
-    ].filter(s => s.url);
-
-    socialLinks.innerHTML = socials.map(s => `
-      <a href="${escHtml(s.url)}" target="_blank" class="social-link" title="${escHtml(s.label)}">
-        ${s.icon}
-      </a>`).join('');
+    socialLinks.innerHTML = buildSocialButtons(p, 'social-link');
   }
 }
 
-// ════════════════════════════════════════════════════════════════
-//  EXPERIENCES
-// ════════════════════════════════════════════════════════════════
+// ── Experiences ───────────────────────────────────────────────────
 async function loadExperiences() {
   const exps = await fetchJson('/experiences');
   hide('experienceLoading');
   const container = document.getElementById('experienceTimeline');
   if (!container) return;
-
   if (!exps || exps.length === 0) {
-    container.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem">No experiences added yet.</p>';
-    show('experienceTimeline');
-    return;
+    container.innerHTML = `<p class="empty-msg">${t('no.data')}</p>`;
+    show('experienceTimeline'); return;
   }
-
   container.innerHTML = exps.map(e => {
     const period = e.is_current
-      ? `${fmtDate(e.start_date)} — Present`
+      ? `${fmtDate(e.start_date)} — <span class="tag-green" style="padding:.1rem .4rem;border-radius:4px">${t('exp.present')}</span>`
       : `${fmtDate(e.start_date)} — ${fmtDate(e.end_date)}`;
-
-    const tags = (e.tech_stack || '').split(',').map(t => t.trim()).filter(Boolean);
-
+    const tags = (e.tech_stack || '').split(',').map(t2 => t2.trim()).filter(Boolean);
     return `
-      <div class="timeline-item">
+      <div class="timeline-item fade-in">
         <div class="timeline-card">
           <div class="timeline-top">
             <div>
               <div class="timeline-company">${escHtml(e.company)}</div>
               <div class="timeline-position">${escHtml(e.position)}</div>
-              ${e.location ? `<div class="timeline-location">📍 ${escHtml(e.location)}</div>` : ''}
+              ${e.location ? `<div class="timeline-location">${locIcon()} ${escHtml(e.location)}</div>` : ''}
             </div>
-            <div class="timeline-period">${escHtml(period)}</div>
+            <div class="timeline-period">${period}</div>
           </div>
-          ${e.description ? `<p class="timeline-desc">${escHtml(e.description)}</p>` : ''}
-          ${tags.length ? `<div class="timeline-tags">${tags.map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
+          ${e.description ? `<div class="timeline-desc">${escHtml(e.description)}</div>` : ''}
+          ${tags.length ? `<div class="timeline-tags">${tags.map(tg => `<span class="tag">${escHtml(tg)}</span>`).join('')}</div>` : ''}
         </div>
       </div>`;
   }).join('');
-
   show('experienceTimeline');
+
+  // Observe new fade-ins
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  container.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
 }
 
-// ════════════════════════════════════════════════════════════════
-//  PROJECTS
-// ════════════════════════════════════════════════════════════════
-let allProjects = [];
+// ── Projects ──────────────────────────────────────────────────────
+let allProjects   = [];
+let currentFilter = 'All';
 
 async function loadProjects() {
   allProjects = await fetchJson('/projects') || [];
   hide('projectsLoading');
-
-  // Build filter buttons
-  const filterEl = document.getElementById('projectsFilter');
-  if (filterEl) {
-    const categories = ['All', ...new Set(allProjects.map(p => p.category).filter(Boolean))];
-    filterEl.innerHTML = categories.map((cat, i) => `
-      <button class="filter-btn${i === 0 ? ' active' : ''}"
-              data-cat="${escHtml(cat)}"
-              onclick="filterProjects('${escHtml(cat)}', this)">
-        ${escHtml(cat)}
-      </button>`).join('');
-  }
-
+  currentFilter = t('projects.all');
+  rebuildProjectTabs();
   renderProjects(allProjects);
-  // Update hero stat
   setText('heroProjectCount', allProjects.length + '+');
 }
 
-function filterProjects(category, btn) {
-  // Update active button
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+function rebuildProjectTabs() {
+  const filterEl = document.getElementById('projectsFilter');
+  if (!filterEl || !allProjects.length) return;
 
-  const filtered = category === 'All'
+  // Get unique categories preserving insertion order
+  const cats = [...new Set(allProjects.map(p => p.category).filter(Boolean))];
+  const allLabel = t('projects.all');
+
+  // Normalize current filter when language changes
+  const allLabels = [i18n.en['projects.all'], i18n.id['projects.all']];
+  if (allLabels.includes(currentFilter)) currentFilter = allLabel;
+
+  filterEl.innerHTML = [allLabel, ...cats].map(cat => `
+    <button
+      class="proj-tab${cat === currentFilter ? ' active' : ''}"
+      role="tab"
+      aria-selected="${cat === currentFilter}"
+      data-cat="${escHtml(cat)}"
+      onclick="filterProjects('${escHtml(cat)}', this)">
+      ${escHtml(cat)}
+    </button>`).join('');
+}
+
+function filterProjects(category, btn) {
+  currentFilter = category;
+  document.querySelectorAll('.proj-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.cat === category);
+    b.setAttribute('aria-selected', b.dataset.cat === category);
+  });
+  const allLabel = t('projects.all');
+  const filtered = (category === allLabel)
     ? allProjects
     : allProjects.filter(p => p.category === category);
-
   renderProjects(filtered);
 }
 
 function renderProjects(projects) {
-  const grid = document.getElementById('projectsGrid');
+  const grid  = document.getElementById('projectsGrid');
   const empty = document.getElementById('projectsEmpty');
   if (!grid) return;
 
-  if (projects.length === 0) {
-    grid.style.display = 'none';
-    empty.classList.remove('hidden');
+  if (!projects || projects.length === 0) {
+    grid.style.display  = 'none';
+    if (empty) { empty.textContent = t('projects.empty'); empty.classList.remove('hidden'); }
     return;
   }
-  empty.classList.add('hidden');
+  if (empty) empty.classList.add('hidden');
   grid.style.display = '';
 
-  grid.innerHTML = projects.map(p => {
-    // Cloudinary URL sudah absolute — tidak perlu prefix BASE
+  grid.innerHTML = projects.map((p, idx) => {
+    // Cloudinary URL is absolute — use directly
     const imgEl = p.image_url
-      ? `<img src="${escHtml(p.image_url)}" alt="${escHtml(p.title)}" class="project-img" loading="lazy"
-              onerror="this.parentNode.innerHTML='<div class=&quot;project-img-placeholder&quot;>No Image</div>'"/>`
+      ? `<div class="project-img-wrap">
+           <img src="${escHtml(p.image_url)}" alt="${escHtml(p.title)}" class="project-img" loading="lazy"
+                onerror="this.parentNode.innerHTML='<div class=&quot;project-img-placeholder&quot;>No Image</div>'"/>
+           <div class="project-img-overlay"></div>
+         </div>`
       : `<div class="project-img-placeholder">No Image</div>`;
 
     const metrics = [p.metric_users, p.metric_perf, p.metric_custom].filter(Boolean);
-    const tags    = (p.tech_stack || '').split(',').map(t => t.trim()).filter(Boolean);
+    const tagList = (p.tech_stack || '').split(',').map(t2 => t2.trim()).filter(Boolean);
 
     return `
-      <article class="project-card">
+      <article class="project-card" style="animation-delay:${idx * 60}ms">
         ${imgEl}
         <div class="project-body">
           <div class="project-category">${escHtml(p.category || 'Project')}</div>
           <h3 class="project-title">${escHtml(p.title)}</h3>
-          <p class="project-desc">${escHtml(p.short_desc || p.description?.substring(0, 120) || '')}</p>
+          <p class="project-desc">${escHtml(p.short_desc || (p.description || '').substring(0, 120))}</p>
           ${metrics.length ? `<div class="project-metrics">${metrics.map(m => `<span class="project-metric">${escHtml(m)}</span>`).join('')}</div>` : ''}
-          ${tags.length ? `<div class="timeline-tags">${tags.slice(0, 5).map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
+          ${tagList.length ? `<div class="timeline-tags">${tagList.slice(0, 5).map(tg => `<span class="tag">${escHtml(tg)}</span>`).join('')}</div>` : ''}
           <div class="project-footer">
             <div class="project-links">
-              ${p.demo_url ? `<a href="${escHtml(p.demo_url)}" target="_blank" class="project-link-btn">Demo ↗</a>` : ''}
-              ${p.repo_url ? `<a href="${escHtml(p.repo_url)}" target="_blank" class="project-link-btn">Repo ↗</a>` : ''}
+              ${p.demo_url ? `<a href="${escHtml(p.demo_url)}" target="_blank" rel="noopener" class="project-link-btn">Demo ↗</a>` : ''}
+              ${p.repo_url ? `<a href="${escHtml(p.repo_url)}" target="_blank" rel="noopener" class="project-link-btn">Repo ↗</a>` : ''}
             </div>
             ${p.is_featured ? '<span class="project-featured-badge">★ Featured</span>' : ''}
           </div>
@@ -360,36 +549,27 @@ function renderProjects(projects) {
   }).join('');
 }
 
-// ════════════════════════════════════════════════════════════════
-//  SKILLS
-// ════════════════════════════════════════════════════════════════
+// ── Skills ────────────────────────────────────────────────────────
 async function loadSkills() {
   const skills = await fetchJson('/skills') || [];
   hide('skillsLoading');
-
   const container = document.getElementById('skillsContainer');
   if (!container) return;
 
   if (skills.length === 0) {
-    container.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem">No skills added yet.</p>';
-    show('skillsContainer');
-    return;
+    container.innerHTML = `<p class="empty-msg">${t('no.data')}</p>`;
+    show('skillsContainer'); return;
   }
 
-  // Group by category
   const groups = {};
-  skills.forEach(s => {
-    const cat = s.category || 'General';
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push(s);
-  });
+  skills.forEach(s => { const cat = s.category || 'General'; if (!groups[cat]) groups[cat] = []; groups[cat].push(s); });
 
   container.innerHTML = Object.entries(groups).map(([cat, group]) => `
     <div class="skills-section-group">
       <div class="skills-group-title">${escHtml(cat)}</div>
       <div class="skills-grid">
         ${group.map(s => `
-          <div class="skill-card" data-level="${s.level}">
+          <div class="skill-card">
             <div class="skill-name">${escHtml(s.name)}</div>
             <div class="skill-bar-bg">
               <div class="skill-bar-fill" style="width:0%" data-target="${s.level}"></div>
@@ -399,43 +579,37 @@ async function loadSkills() {
       </div>
     </div>`).join('');
 
+  show('skillsContainer');
+
   // Animate bars on scroll
   const bars = container.querySelectorAll('.skill-bar-fill');
-  const barObserver = new IntersectionObserver((entries) => {
+  const barObs = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        const bar = entry.target;
-        bar.style.width = bar.dataset.target + '%';
-        barObserver.unobserve(bar);
+        entry.target.style.width = entry.target.dataset.target + '%';
+        barObs.unobserve(entry.target);
       }
     });
   }, { threshold: 0.1 });
-  bars.forEach(bar => barObserver.observe(bar));
-
-  show('skillsContainer');
+  bars.forEach(bar => barObs.observe(bar));
 }
 
-// ════════════════════════════════════════════════════════════════
-//  EDUCATION
-// ════════════════════════════════════════════════════════════════
+// ── Education ─────────────────────────────────────────────────────
 async function loadEducation() {
   const edu = await fetchJson('/education') || [];
   hide('educationLoading');
-
   const grid = document.getElementById('educationGrid');
   if (!grid) return;
 
   if (edu.length === 0) {
-    grid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem;grid-column:1/-1">No education added yet.</p>';
-    show('educationGrid');
-    return;
+    grid.innerHTML = `<p class="empty-msg" style="grid-column:1/-1">${t('no.data')}</p>`;
+    show('educationGrid'); return;
   }
 
   grid.innerHTML = edu.map(e => {
     const years = e.is_current
-      ? `${e.start_year} — Present`
+      ? `${e.start_year} — ${t('exp.present')}`
       : `${e.start_year} — ${e.end_year || '?'}`;
-
     return `
       <div class="edu-card">
         <div class="edu-icon">
@@ -447,44 +621,36 @@ async function loadEducation() {
         <div class="edu-degree">${escHtml(e.degree)}</div>
         ${e.field_of_study ? `<div class="edu-field">${escHtml(e.field_of_study)}</div>` : ''}
         <div class="edu-year">${years}</div>
-        ${e.gpa ? `<span class="edu-gpa">GPA: ${e.gpa}</span>` : ''}
+        ${e.gpa ? `<span class="edu-gpa">GPA ${parseFloat(e.gpa).toFixed(2)}</span>` : ''}
         ${e.description ? `<p style="font-size:.8rem;color:var(--muted);margin-top:.75rem;line-height:1.6">${escHtml(e.description)}</p>` : ''}
       </div>`;
   }).join('');
-
   show('educationGrid');
 }
 
-// ════════════════════════════════════════════════════════════════
-//  CERTIFICATES
-// ════════════════════════════════════════════════════════════════
+// ── Certificates ──────────────────────────────────────────────────
 async function loadCertificates() {
   const certs = await fetchJson('/certificates') || [];
   hide('certsLoading');
-
   const grid = document.getElementById('certsGrid');
   if (!grid) return;
 
-  // Update hero stat
   setText('heroCertCount', certs.length + '+');
 
   if (certs.length === 0) {
-    grid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem;grid-column:1/-1">No certificates added yet.</p>';
-    show('certsGrid');
-    return;
+    grid.innerHTML = `<p class="empty-msg" style="grid-column:1/-1">${t('no.data')}</p>`;
+    show('certsGrid'); return;
   }
 
   grid.innerHTML = certs.map(c => {
-    // Cloudinary URL sudah absolute — tidak perlu prefix BASE
+    // Cloudinary URL is absolute — use directly
     const imgEl = c.image_url
-      ? `<img src="${escHtml(c.image_url)}" alt="${escHtml(c.name)}" class="cert-img" loading="lazy"
-              onerror="this.parentNode.innerHTML='<div class=&quot;cert-img-placeholder&quot;></div>'"/>`
+      ? `<div class="cert-img-wrap"><img src="${escHtml(c.image_url)}" alt="${escHtml(c.name)}" class="cert-img" loading="lazy" onerror="this.parentNode.innerHTML='<div class=&quot;cert-img-placeholder&quot;></div>'"/></div>`
       : `<div class="cert-img-placeholder">
-           <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:var(--muted)">
+           <svg width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:var(--muted)">
              <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
            </svg>
          </div>`;
-
     return `
       <div class="cert-card">
         ${imgEl}
@@ -492,16 +658,15 @@ async function loadCertificates() {
           <div class="cert-name">${escHtml(c.name)}</div>
           <div class="cert-issuer">${escHtml(c.issuer)}</div>
           <div class="cert-date">
-            Issued: ${fmtDate(c.issue_date)}
-            ${c.expiry_date ? ` · Expires: ${fmtDate(c.expiry_date)}` : ''}
+            ${fmtDate(c.issue_date)}${c.expiry_date ? ` · ${fmtDate(c.expiry_date)}` : ''}
           </div>
-          ${c.credential_id ? `<div style="font-size:.73rem;color:var(--muted);margin-top:.3rem">ID: ${escHtml(c.credential_id)}</div>` : ''}
+          ${c.credential_id ? `<div style="font-size:.7rem;color:var(--muted-2);margin-top:.3rem">ID: ${escHtml(c.credential_id)}</div>` : ''}
         </div>
         ${c.credential_url ? `
         <div class="cert-footer">
-          <a href="${escHtml(c.credential_url)}" target="_blank" class="cert-verify-link">
-            Verify Credential
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <a href="${escHtml(c.credential_url)}" target="_blank" rel="noopener" class="cert-verify-link">
+            Verify ↗
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
               <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
             </svg>
@@ -509,47 +674,41 @@ async function loadCertificates() {
         </div>` : ''}
       </div>`;
   }).join('');
-
   show('certsGrid');
 }
 
-// ════════════════════════════════════════════════════════════════
-//  CONTACT FORM
-// ════════════════════════════════════════════════════════════════
+// ── Contact Form ──────────────────────────────────────────────────
 (function initContactForm() {
   const form = document.getElementById('contactForm');
   if (!form) return;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const name    = document.getElementById('senderName').value.trim();
     const email   = document.getElementById('senderEmail').value.trim();
     const subject = document.getElementById('msgSubject').value.trim();
     const message = document.getElementById('msgMessage').value.trim();
 
-    // Validation
+    // Clear errors
+    ['errName','errEmail','errMsg'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    });
+
     let valid = true;
-    const errName  = document.getElementById('errName');
-    const errEmail = document.getElementById('errEmail');
-    const errMsg   = document.getElementById('errMsg');
-
-    [errName, errEmail, errMsg].forEach(el => el.classList.add('hidden'));
-
-    if (!name)  { errName.classList.remove('hidden');  valid = false; }
+    if (!name)  { document.getElementById('errName')?.classList.remove('hidden');  valid = false; }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errEmail.classList.remove('hidden'); valid = false;
+      document.getElementById('errEmail')?.classList.remove('hidden'); valid = false;
     }
-    if (!message) { errMsg.classList.remove('hidden');  valid = false; }
+    if (!message) { document.getElementById('errMsg')?.classList.remove('hidden'); valid = false; }
     if (!valid) return;
 
-    // Submit
     const btn     = document.getElementById('contactSubmitBtn');
     const btnText = document.getElementById('contactBtnText');
     const spinner = document.getElementById('contactSpinner');
-    btn.disabled     = true;
-    btnText.textContent = 'Sending…';
-    spinner.classList.remove('hidden');
+    btn.disabled = true;
+    if (btnText) btnText.textContent = '…';
+    spinner?.classList.remove('hidden');
 
     try {
       const res = await fetch(`${API}/contacts`, {
@@ -557,56 +716,40 @@ async function loadCertificates() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sender_name: name, sender_email: email, subject, message })
       });
-      const json = await res.json();
-
       if (res.ok) {
         form.reset();
-        document.getElementById('contactFormSuccess').classList.remove('hidden');
-        setTimeout(() => document.getElementById('contactFormSuccess').classList.add('hidden'), 6000);
+        const success = document.getElementById('contactFormSuccess');
+        const span = success?.querySelector('[data-i18n]');
+        if (span) span.textContent = t('contact.success');
+        success?.classList.remove('hidden');
+        setTimeout(() => success?.classList.add('hidden'), 6000);
       } else {
-        alert(json.message || 'Failed to send message. Please try again.');
+        const json = await res.json();
+        alert(json.message || 'Failed to send message.');
       }
-    } catch (err) {
-      alert('Cannot connect to server. Please try again later.');
-      console.error(err);
+    } catch {
+      alert('Cannot connect to server. Please try again.');
     } finally {
-      btn.disabled    = false;
-      btnText.textContent = 'Send Message';
-      spinner.classList.add('hidden');
+      btn.disabled = false;
+      if (btnText) btnText.textContent = t('contact.send');
+      spinner?.classList.add('hidden');
     }
   });
 })();
 
-// ════════════════════════════════════════════════════════════════
-//  SVG Icon helpers
-// ════════════════════════════════════════════════════════════════
-function locIcon()   { return `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`; }
-function mailIcon()  { return `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`; }
-function phoneIcon() { return `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 17z"/></svg>`; }
-function linkIcon()  { return `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`; }
-function expIcon()   { return `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`; }
-function ghIcon()    { return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.373 0 12c0 5.303 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.298 24 12c0-6.627-5.373-12-12-12z"/></svg>`; }
-function liIcon()    { return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`; }
-function twIcon()    { return `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 0 1-2.825.775 4.958 4.958 0 0 0 2.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 0 0-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 0 0-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 0 1-2.228-.616v.06a4.923 4.923 0 0 0 3.946 4.827 4.996 4.996 0 0 1-2.212.085 4.936 4.936 0 0 0 4.604 3.417 9.867 9.867 0 0 1-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 0 0 7.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0 0 24 4.59z"/></svg>`; }
-
-// ── Tiny helper to safely set textContent ────────────────────
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-
-// ════════════════════════════════════════════════════════════════
-//  BOOTSTRAP — load all sections
-// ════════════════════════════════════════════════════════════════
+// ── Init ──────────────────────────────────────────────────────────
 (async function init() {
-  await loadProfile();
+  applyI18n(); // apply saved language on load
 
-  // Load other sections in parallel
   await Promise.all([
+    loadProfile(),
     loadExperiences(),
     loadProjects(),
     loadSkills(),
     loadEducation(),
-    loadCertificates()
+    loadCertificates(),
   ]);
+
+  // Apply i18n again after data is loaded (updates dynamic strings)
+  applyI18n();
 })();
