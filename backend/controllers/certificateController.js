@@ -45,21 +45,21 @@ async function create(req, res) {
         name,
         issuer,
         issue_date,
-        expiry_date    || null,
-        credential_id  || '',
+        expiry_date || null,
+        credential_id || '',
         credential_url || '',
         image_url,
-        sort_order ? parseInt(sort_order, 10) : 0
+        sort_order ? parseInt(sort_order, 10) : 0,
       ]
     );
 
-    const insertId = result.insertId || (Array.isArray(result) && result[0]?.insertId);
+    const insertId = result?.insertId || (Array.isArray(result) && result[0]?.insertId);
     const created = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [insertId]);
-    
-    return res.status(201).json({ 
-      success: true, 
-      message: 'Certificate created successfully.', 
-      data: Array.isArray(created) ? created[0] : (created || null)
+
+    return res.status(201).json({
+      success: true,
+      message: 'Certificate created successfully.',
+      data: Array.isArray(created) ? created[0] : created || null,
     });
   } catch (err) {
     console.error('[certificateController.create]', err);
@@ -77,10 +77,10 @@ async function update(req, res) {
 
     const allowed = ['name', 'issuer', 'issue_date', 'expiry_date', 'credential_id', 'credential_url', 'sort_order'];
     const data = {};
-    
-    allowed.forEach(f => { 
+
+    allowed.forEach((f) => {
       if (req.body && req.body[f] !== undefined) {
-        data[f] = req.body[f]; 
+        data[f] = req.body[f];
       }
     });
 
@@ -96,10 +96,10 @@ async function update(req, res) {
     await query(`UPDATE certificates SET ${clause} WHERE id = ?`, [...values, req.params.id]);
 
     const updated = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Certificate updated successfully.', 
-      data: Array.isArray(updated) ? updated[0] : (updated || null)
+    return res.status(200).json({
+      success: true,
+      message: 'Certificate updated successfully.',
+      data: Array.isArray(updated) ? updated[0] : updated || null,
     });
   } catch (err) {
     console.error('[certificateController.update]', err);

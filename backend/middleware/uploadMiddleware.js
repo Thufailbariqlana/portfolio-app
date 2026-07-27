@@ -4,14 +4,14 @@ const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Konfigurasi Cloudinary menggunakan environment variables
+// Konfigurasi Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Helper function untuk membuat storage dinamis berdasarkan folder
+// Helper function untuk membuat storage dinamis
 const createCloudinaryStorage = (folderName = 'portfolio_uploads') => {
   return new CloudinaryStorage({
     cloudinary: cloudinary,
@@ -22,15 +22,15 @@ const createCloudinaryStorage = (folderName = 'portfolio_uploads') => {
   });
 };
 
-// Middleware dinamis (untuk profileRoutes yang memanggil dengan argumen folder)
-const uploadToCloudinaryMiddleware = (folderName) => {
+// Middleware dinamis dengan dukungan nama field kustom
+const uploadToCloudinaryMiddleware = (folderName, fieldName = 'file') => {
   const storage = createCloudinaryStorage(folderName);
-  const upload = multer({ storage: storage });
-  return upload.single('file'); // Default field name 'file' atau 'image'
+  const upload = multer({ storage });
+  return upload.single(fieldName);
 };
 
-// Middleware khusus multer memory / temporary upload
-const uploadSingle = multer({ storage: multer.memoryStorage() }).single('file');
+// Memory storage jika ingin memproses buffer file secara manual (misal dengan Sharp)
+const uploadSingle = (fieldName = 'file') => multer({ storage: multer.memoryStorage() }).single(fieldName);
 
 // Middleware khusus upload sertifikat dengan field 'image'
 const uploadCertImage = multer({ storage: createCloudinaryStorage('portfolio/certificates') }).single('image');
