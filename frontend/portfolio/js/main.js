@@ -131,17 +131,17 @@ async function loadProfile() {
     badgeWrap.style.display = p.open_to_work ? '' : 'none';
   }
 
-  // Photo
+  // Photo — Cloudinary menyimpan URL penuh, gunakan langsung
   if (p.photo_url) {
     const img = document.getElementById('heroPhoto');
-    if (img) img.src = BASE + p.photo_url;
+    if (img) img.src = p.photo_url;
   }
 
-  // CV download button
+  // CV download button — Cloudinary URL sudah absolute
   if (p.cv_url) {
     const btn = document.getElementById('cvDownloadBtn');
     if (btn) {
-      btn.href = BASE + p.cv_url;
+      btn.href = p.cv_url;
       btn.classList.remove('hidden');
     }
   }
@@ -330,8 +330,9 @@ function renderProjects(projects) {
   grid.style.display = '';
 
   grid.innerHTML = projects.map(p => {
+    // Cloudinary URL sudah absolute — tidak perlu prefix BASE
     const imgEl = p.image_url
-      ? `<img src="${BASE + escHtml(p.image_url)}" alt="${escHtml(p.title)}" class="project-img" loading="lazy"
+      ? `<img src="${escHtml(p.image_url)}" alt="${escHtml(p.title)}" class="project-img" loading="lazy"
               onerror="this.parentNode.innerHTML='<div class=&quot;project-img-placeholder&quot;>No Image</div>'"/>`
       : `<div class="project-img-placeholder">No Image</div>`;
 
@@ -474,8 +475,9 @@ async function loadCertificates() {
   }
 
   grid.innerHTML = certs.map(c => {
+    // Cloudinary URL sudah absolute — tidak perlu prefix BASE
     const imgEl = c.image_url
-      ? `<img src="${BASE + escHtml(c.image_url)}" alt="${escHtml(c.name)}" class="cert-img" loading="lazy"
+      ? `<img src="${escHtml(c.image_url)}" alt="${escHtml(c.name)}" class="cert-img" loading="lazy"
               onerror="this.parentNode.innerHTML='<div class=&quot;cert-img-placeholder&quot;></div>'"/>`
       : `<div class="cert-img-placeholder">
            <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:var(--muted)">
