@@ -32,7 +32,6 @@ async function submit(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid email address.' });
     }
 
-    // Simpan data beserta attachment (jika ada) ke database
     const result = await query(
       'INSERT INTO contacts (sender_name, sender_email, subject, message, attachment) VALUES (?, ?, ?, ?, ?)',
       [
@@ -54,7 +53,7 @@ async function submit(req, res) {
       }).catch(e => console.error('[contactController] Email send failed:', e.message));
     }
 
-    const [created] = await query('SELECT * FROM contacts WHERE id = ? LIMIT 1', [result.insertId]);
+    const created = await query('SELECT * FROM contacts WHERE id = ? LIMIT 1', [result.insertId || result[0]?.insertId]);
     const createdRecord = Array.isArray(created) ? created[0] : created;
 
     return res.status(201).json({ success: true, message: 'Message sent. Thank you!', data: createdRecord });
@@ -73,14 +72,18 @@ async function getAll(req, res) {
     if (unread === 'true') { sql += ' WHERE is_read = 0'; }
     sql += ' ORDER BY created_at DESC';
 
-    const [rows] = await query(sql, params);
-    const [countRows] = await query('SELECT COUNT(*) AS total FROM contacts WHERE is_read = 0');
+    // TANPA [rows] destructuring agar tidak merusak array hasil SELECT
+    const rows = await query(sql, params);
+    const countResult = await query('SELECT COUNT(*) AS total FROM contacts WHERE is_read = 0');
 
-    const totalUnread = (countRows && countRows.length > 0) ? countRows[0].total : 0;
+    // Tangani format array/objek dari helper query
+    const dataRows = Array.isArray(rows) ? rows : (rows ? [rows] : []);
+    const countRows = Array.isArray(countResult) ? countResult : [countResult];
+    const totalUnread = (countRows && countRows.length > 0) ? (countRows[0]?.total || 0) : 0;
 
     return res.status(200).json({
       success: true,
-      data: Array.isArray(rows) ? rows : [],
+      data: dataRows,
       unread_count: totalUnread
     });
   } catch (err) {
@@ -92,17 +95,19 @@ async function getAll(req, res) {
 // ── GET /api/contacts/:id ─────────────────────────────────────────────────────
 async function getOne(req, res) {
   try {
-    const [rows] = await query('SELECT * FROM contacts WHERE id = ? LIMIT 1', [req.params.id]);
-    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+    const rows = await query('SELECT * FROM contacts WHERE id = ? LIMIT 1', [req.params.id]);
+    const dataRows = Array.isArray(rows) ? rows : [rows];
+
+    if (!dataRows || dataRows.length === 0 || !dataRows[0]) {
       return res.status(404).json({ success: false, message: 'Contact message not found.' });
     }
 
-    if (!rows[0].is_read) {
+    if (!dataRows[0].is_read) {
       await query('UPDATE contacts SET is_read = 1 WHERE id = ?', [req.params.id]);
-      rows[0].is_read = 1;
+      dataRows[0].is_read = 1;
     }
 
-    return res.status(200).json({ success: true, data: rows[0] });
+    return res.status(200).json({ success: true, data: dataRows[0] });
   } catch (err) {
     console.error('[contactController.getOne]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
@@ -114,8 +119,10 @@ async function markRead(req, res) {
   try {
     const is_read = req.body.is_read !== undefined ? req.body.is_read : 1;
 
-    const [existing] = await query('SELECT id FROM contacts WHERE id = ? LIMIT 1', [req.params.id]);
-    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+    const existing = await query('SELECT id FROM contacts WHERE id = ? LIMIT 1', [req.params.id]);
+    const dataRows = Array.isArray(existing) ? existing : [existing];
+
+    if (!dataRows || dataRows.length === 0 || !dataRows[0]) {
       return res.status(404).json({ success: false, message: 'Contact message not found.' });
     }
 
@@ -130,8 +137,10 @@ async function markRead(req, res) {
 // ── DELETE /api/contacts/:id ──────────────────────────────────────────────────
 async function remove(req, res) {
   try {
-    const [existing] = await query('SELECT id FROM contacts WHERE id = ? LIMIT 1', [req.params.id]);
-    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+    const existing = await query('SELECT id FROM contacts WHERE id = ? LIMIT 1', [req.params.id]);
+    const dataRows = Array.isArray(existing) ? existing : [existing];
+
+    if (!dataRows || dataRows.length === 0 || !dataRows[0]) {
       return res.status(404).json({ success: false, message: 'Contact message not found.' });
     }
 
