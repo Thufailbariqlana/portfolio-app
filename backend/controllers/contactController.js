@@ -32,6 +32,7 @@ async function submit(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid email address.' });
     }
 
+    // TANPA [ ] karena INSERT mengembalikan ResultSet langsung (bukan array rows)
     const result = await query(
       'INSERT INTO contacts (sender_name, sender_email, subject, message) VALUES (?, ?, ?, ?)',
       [sender_name.trim(), sender_email.trim(), (subject || '').trim(), message.trim()]
@@ -47,8 +48,12 @@ async function submit(req, res) {
       }).catch(e => console.error('[contactController] Email send failed:', e.message));
     }
 
+    // Ambil data yang baru saja dimasukkan (SELECT mengembalikan array rows, jadi pakai [created])
     const [created] = await query('SELECT * FROM contacts WHERE id = ? LIMIT 1', [result.insertId]);
-    return res.status(201).json({ success: true, message: 'Message sent. Thank you!', data: created[0] });
+    
+    const createdRecord = Array.isArray(created) ? created[0] : created;
+
+    return res.status(201).json({ success: true, message: 'Message sent. Thank you!', data: createdRecord });
   } catch (err) {
     console.error('[contactController.submit]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
