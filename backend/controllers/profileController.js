@@ -1,7 +1,5 @@
 'use strict';
 
-const path = require('path');
-const fs   = require('fs');
 const { query, buildSetClause } = require('../config/db');
 
 // Helper untuk memastikan record id = 1 selalu ada
@@ -42,7 +40,6 @@ async function getProfile(req, res) {
 // ── PUT /api/profile ──────────────────────────────────────────────────────────
 async function updateProfile(req, res) {
   try {
-    // Pastikan baris id = 1 sudah ada sebelum update
     await ensureProfileExists();
 
     const allowed = [
@@ -55,16 +52,6 @@ async function updateProfile(req, res) {
     allowed.forEach(field => {
       if (req.body[field] !== undefined) data[field] = req.body[field];
     });
-
-    // Handle photo upload
-    if (req.file && req.fileType === 'photo') {
-      const oldRows = await query('SELECT photo_url FROM profile WHERE id = 1 LIMIT 1');
-      if (oldRows && oldRows.length && oldRows[0].photo_url) {
-        const oldPath = path.join(__dirname, '..', oldRows[0].photo_url);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      }
-      data.photo_url = `/uploads/photos/${req.file.filename}`;
-    }
 
     if (Object.keys(data).length === 0) {
       return res.status(400).json({ success: false, message: 'No valid fields provided.' });
@@ -94,13 +81,8 @@ async function uploadPhoto(req, res) {
 
     await ensureProfileExists();
 
-    const oldRows = await query('SELECT photo_url FROM profile WHERE id = 1 LIMIT 1');
-    if (oldRows && oldRows.length && oldRows[0].photo_url) {
-      const oldPath = path.join(__dirname, '..', oldRows[0].photo_url);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-    }
-
-    const photo_url = `/uploads/photos/${req.file.filename}`;
+    // URL publik dari Cloudinary yang sudah diproses oleh middleware
+    const photo_url = req.file.path; 
     await query('UPDATE profile SET photo_url = ? WHERE id = 1', [photo_url]);
 
     return res.status(200).json({ success: true, message: 'Photo uploaded.', data: { photo_url } });
@@ -119,13 +101,8 @@ async function uploadCV(req, res) {
 
     await ensureProfileExists();
 
-    const oldRows = await query('SELECT cv_url FROM profile WHERE id = 1 LIMIT 1');
-    if (oldRows && oldRows.length && oldRows[0].cv_url) {
-      const oldPath = path.join(__dirname, '..', oldRows[0].cv_url);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-    }
-
-    const cv_url = `/uploads/photos/${req.file.filename}`;
+    // URL publik dari Cloudinary yang sudah diproses oleh middleware
+    const cv_url = req.file.path;
     await query('UPDATE profile SET cv_url = ? WHERE id = 1', [cv_url]);
 
     return res.status(200).json({ success: true, message: 'CV uploaded.', data: { cv_url } });
