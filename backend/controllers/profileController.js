@@ -45,6 +45,7 @@ async function updateProfile(req, res) {
     const allowed = [
       'full_name', 'title', 'bio', 'email', 'phone', 'location',
       'website', 'github_url', 'linkedin_url', 'twitter_url',
+      'instagram_url', 'facebook_url', 'youtube_url',
       'years_of_exp', 'open_to_work'
     ];
 

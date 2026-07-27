@@ -17,8 +17,11 @@ async function loadProfile() {
   document.getElementById('pWebsite').value     = p.website      || '';
   document.getElementById('pGithub').value      = p.github_url   || '';
   document.getElementById('pLinkedin').value    = p.linkedin_url || '';
-  document.getElementById('pTwitter').value     = p.twitter_url  || '';
-  document.getElementById('pYears').value       = p.years_of_exp || 0;
+  document.getElementById('pTwitter').value     = p.twitter_url   || '';
+  document.getElementById('pInstagram').value   = p.instagram_url || '';
+  document.getElementById('pFacebook').value    = p.facebook_url  || '';
+  document.getElementById('pYoutube').value     = p.youtube_url   || '';
+  document.getElementById('pYears').value       = p.years_of_exp  || 0;
   document.getElementById('pOpenToWork').checked = !!p.open_to_work;
 
   // Photo & CV — Cloudinary menyimpan URL penuh, gunakan langsung tanpa prefix BASE
@@ -50,8 +53,11 @@ async function saveProfile() {
     website:       document.getElementById('pWebsite').value.trim(),
     github_url:    document.getElementById('pGithub').value.trim(),
     linkedin_url:  document.getElementById('pLinkedin').value.trim(),
-    twitter_url:   document.getElementById('pTwitter').value.trim(),
-    years_of_exp:  Number(document.getElementById('pYears').value) || 0,
+    twitter_url:    document.getElementById('pTwitter').value.trim(),
+    instagram_url:  document.getElementById('pInstagram').value.trim(),
+    facebook_url:   document.getElementById('pFacebook').value.trim(),
+    youtube_url:    document.getElementById('pYoutube').value.trim(),
+    years_of_exp:   Number(document.getElementById('pYears').value) || 0,
     open_to_work:  document.getElementById('pOpenToWork').checked ? 1 : 0
   };
 
