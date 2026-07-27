@@ -6,7 +6,6 @@ const auth   = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 // ── Failsafe Helper (Anti-Crash Guard) ────────────────────────────────────────
-// Mencegah error 'requires a callback function but got a [object Undefined]'
 const safeMiddleware = (fn, name) => {
   if (typeof fn === 'function') return fn;
   console.warn(`[WARN] Middleware/Controller '${name}' is undefined. Falling back to pass-through.`);
@@ -14,7 +13,7 @@ const safeMiddleware = (fn, name) => {
 };
 
 const protectMW        = safeMiddleware(auth.protect || auth, 'auth.protect');
-const uploadCertImageMW = safeMiddleware(upload.uploadCertImage || (upload.upload && upload.upload.single('image')), 'upload.uploadCertImage');
+const uploadCertImageMW = safeMiddleware(upload.uploadCertImage, 'upload.uploadCertImage');
 
 // ── Certificate Routes ────────────────────────────────────────────────────────
 router.get('/',        safeMiddleware(ctrl.getAll, 'ctrl.getAll'));

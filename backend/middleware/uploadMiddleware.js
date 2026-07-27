@@ -1,39 +1,42 @@
 'use strict';
 
 const multer = require('multer');
+const { v2: cloudinary } = require('cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Gunakan MemoryStorage agar ramah Serverless (Vercel filesystem bersifat read-only)
-const storage = multer.memoryStorage();
-
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
-  }
-};
-
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Limit 5MB
-  fileFilter: fileFilter
+// Konfigurasi Cloudinary menggunakan environment variables
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Middleware helper khusus single image upload
-const uploadCertImage = (req, res, next) => {
-  const singleUpload = upload.single('image');
-  singleUpload(req, res, (err) => {
-    if (err) {
-      if (err instanceof multer.MulterError) {
-        return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
-      }
-      return res.status(400).json({ success: false, message: err.message });
-    }
-    next();
+// Helper function untuk membuat storage dinamis berdasarkan folder
+const createCloudinaryStorage = (folderName = 'portfolio_uploads') => {
+  return new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: folderName,
+      allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'pdf'],
+    },
   });
 };
 
+// Middleware dinamis (untuk profileRoutes yang memanggil dengan argumen folder)
+const uploadToCloudinaryMiddleware = (folderName) => {
+  const storage = createCloudinaryStorage(folderName);
+  const upload = multer({ storage: storage });
+  return upload.single('file'); // Default field name 'file' atau 'image'
+};
+
+// Middleware khusus multer memory / temporary upload
+const uploadSingle = multer({ storage: multer.memoryStorage() }).single('file');
+
+// Middleware khusus upload sertifikat dengan field 'image'
+const uploadCertImage = multer({ storage: createCloudinaryStorage('portfolio/certificates') }).single('image');
+
 module.exports = {
-  upload,
-  uploadCertImage
+  uploadToCloudinaryMiddleware,
+  uploadSingle,
+  uploadCertImage,
 };
