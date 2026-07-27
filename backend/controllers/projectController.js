@@ -1,7 +1,5 @@
 'use strict';
 
-const path    = require('path');
-const fs      = require('fs');
 const slugify = require('slugify');
 const { query, buildSetClause } = require('../config/db');
 
@@ -64,7 +62,8 @@ async function create(req, res) {
       return res.status(409).json({ success: false, message: `Slug "${slug}" already exists. Use a different title.` });
     }
 
-    const image_url = req.file ? `/uploads/projects/${req.file.filename}` : '';
+    // Mengambil URL Cloudinary dari middleware upload
+    const image_url = req.file ? (req.file.path || req.file.filename) : '';
 
     const result = await query(
       `INSERT INTO projects (title, slug, short_desc, description, image_url, demo_url, repo_url, tech_stack, category, metric_users, metric_perf, metric_custom, is_featured, sort_order)
@@ -87,11 +86,11 @@ async function create(req, res) {
       ]
     );
 
-    const created = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [result.insertId]);
+    const created = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [result.insertId || result[0]?.insertId]);
     return res.status(201).json({ 
       success: true, 
       message: 'Project created.', 
-      data: Array.isArray(created) ? created[0] : null 
+      data: Array.isArray(created) ? created[0] : (created || null) 
     });
   } catch (err) {
     console.error('[projectController.create]', err);
@@ -124,11 +123,8 @@ async function update(req, res) {
     }
 
     if (req.file) {
-      if (existing[0].image_url) {
-        const oldPath = path.join(__dirname, '..', existing[0].image_url);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      }
-      data.image_url = `/uploads/projects/${req.file.filename}`;
+      // Menggunakan URL Cloudinary baru; penghapusan file lokal ditiadakan
+      data.image_url = req.file.path || req.file.filename;
     }
 
     if (Object.keys(data).length === 0) return res.status(400).json({ success: false, message: 'No valid fields provided.' });
@@ -140,7 +136,7 @@ async function update(req, res) {
     return res.status(200).json({ 
       success: true, 
       message: 'Project updated.', 
-      data: Array.isArray(updated) ? updated[0] : null 
+      data: Array.isArray(updated) ? updated[0] : (updated || null) 
     });
   } catch (err) {
     console.error('[projectController.update]', err);
@@ -156,11 +152,7 @@ async function remove(req, res) {
       return res.status(404).json({ success: false, message: 'Project not found.' });
     }
 
-    if (existing[0].image_url) {
-      const imgPath = path.join(__dirname, '..', existing[0].image_url);
-      if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
-    }
-
+    // Penghapusan file fisik lokal (fs.unlinkSync) ditiadakan karena file tersimpan di Cloudinary
     await query('DELETE FROM projects WHERE id = ?', [req.params.id]);
     return res.status(200).json({ success: true, message: 'Project deleted.' });
   } catch (err) {

@@ -1,110 +1,61 @@
 'use strict';
 
 const multer = require('multer');
-const path   = require('path');
-const fs     = require('fs');
-const { v4: uuidv4 } = require('uuid');
+const cloudinary = require('cloudinary').v2;
 
-const MAX_SIZE = Number(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024; // 5 MB default
-const UPLOAD_BASE = path.resolve(process.env.UPLOAD_DIR || './uploads');
+// Konfigurasi Cloudinary menggunakan environment variables yang sudah diset di Vercel
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-// ── Allowed MIME types ─────────────────────────────────────────────────────────
-const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const ALLOWED_DOCS = ['application/pdf', ...ALLOWED_MIME];
+// Gunakan memoryStorage agar file ditampung sementara di RAM (mendukung Serverless Vercel)
+const storage = multer.memoryStorage();
 
-/**
- * Create a multer storage (MemoryStorage for Vercel, DiskStorage for Local).
- * @param {string} subfolder  e.g. 'photos', 'projects', 'certificates'
- */
-function makeStorage(subfolder) {
-  // Jika di Vercel Serverless, gunakan MemoryStorage (RAM sementara)
-  if (process.env.VERCEL) {
-    return multer.memoryStorage();
-  }
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // Batas maksimal ukuran file 5MB
+});
 
-  // Jika di lingkungan Local Development (Laptop)
-  const dest = path.join(UPLOAD_BASE, subfolder);
-  if (!fs.existsSync(dest)) {
-    fs.mkdirSync(dest, { recursive: true });
-  }
+// Middleware helper untuk melakukan upload ke Cloudinary setelah file diterima multer
+const uploadToCloudinaryMiddleware = (folderName = 'portfolio') => {
+  return async (req, res, next) => {
+    try {
+      if (!req.file) return next();
 
-  return multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, dest),
-    filename: (_req, file, cb) => {
-      const ext      = path.extname(file.originalname).toLowerCase();
-      const filename = `${uuidv4()}${ext}`;
-      cb(null, filename);
-    }
-  });
-}
+      // Buat stream upload ke Cloudinary dari buffer memori
+      const streamUpload = (reqFile) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: folderName },
+            (error, result) => {
+              if (result) {
+                resolve(result);
+              } else {
+                reject(error);
+              }
+            }
+          );
+          stream.end(reqFile.buffer);
+        });
+      };
 
-/**
- * Generic file filter factory.
- * @param {string[]} allowedMimes
- */
-function makeFilter(allowedMimes) {
-  return (_req, file, cb) => {
-    if (allowedMimes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error(`Unsupported file type: ${file.mimetype}. Allowed: ${allowedMimes.join(', ')}`));
+      const result = await streamUpload(req.file);
+      
+      // Simpan URL publik Cloudinary ke req.file.filename atau path kustom agar bisa dibaca controller
+      req.file.filename = result.secure_url;
+      req.file.path = result.secure_url;
+
+      next();
+    } catch (err) {
+      console.error('[Cloudinary Upload Error]:', err);
+      return res.status(500).json({ success: false, message: 'Failed to upload image to cloud storage.' });
     }
   };
-}
-
-// ── Multer instances ──────────────────────────────────────────────────────────
-
-/** Upload profile photo (images only, field: "photo") */
-const uploadPhoto = multer({
-  storage: makeStorage('photos'),
-  limits: { fileSize: MAX_SIZE },
-  fileFilter: makeFilter(ALLOWED_MIME)
-}).single('photo');
-
-/** Upload project image (images only, field: "image") */
-const uploadProjectImage = multer({
-  storage: makeStorage('projects'),
-  limits: { fileSize: MAX_SIZE },
-  fileFilter: makeFilter(ALLOWED_MIME)
-}).single('image');
-
-/** Upload certificate image (images only, field: "image") */
-const uploadCertImage = multer({
-  storage: makeStorage('certificates'),
-  limits: { fileSize: MAX_SIZE },
-  fileFilter: makeFilter(ALLOWED_MIME)
-}).single('image');
-
-/** Upload CV / resume (PDF or image, field: "cv") */
-const uploadCV = multer({
-  storage: makeStorage('photos'),
-  limits: { fileSize: MAX_SIZE },
-  fileFilter: makeFilter(ALLOWED_DOCS)
-}).single('cv');
-
-/**
- * Wrap a multer instance in a promise so it can be used with async/await.
- * Converts multer errors into HTTP 400 responses.
- * @param {Function} multerFn  Single multer upload handler
- */
-function handleUpload(multerFn) {
-  return (req, res, next) => {
-    multerFn(req, res, (err) => {
-      if (!err) return next();
-      if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(400).json({ success: false, message: `File too large. Maximum size is ${MAX_SIZE / 1024 / 1024} MB.` });
-        }
-        return res.status(400).json({ success: false, message: err.message });
-      }
-      return res.status(400).json({ success: false, message: err.message });
-    });
-  };
-}
+};
 
 module.exports = {
-  uploadPhoto:        handleUpload(uploadPhoto),
-  uploadProjectImage: handleUpload(uploadProjectImage),
-  uploadCertImage:    handleUpload(uploadCertImage),
-  uploadCV:           handleUpload(uploadCV)
+  uploadSingle: upload.single('image'), // Sesuaikan nama field form (misal 'image' atau 'attachment')
+  uploadToCloudinaryMiddleware
 };
