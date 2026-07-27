@@ -3,17 +3,17 @@
 const slugify = require('slugify');
 const { query, buildSetClause } = require('../config/db');
 
-// ── GET /api/projects ─────────────────────────────────────────────────────────
+// GET /api/projects
 async function getAll(req, res) {
   try {
     const { featured, category } = req.query;
-    let sql      = 'SELECT * FROM projects';
+    let sql = 'SELECT * FROM projects';
     const params = [];
     const conditions = [];
 
     if (featured === 'true') { conditions.push('is_featured = 1'); }
-    if (category)            { conditions.push('category = ?'); params.push(category); }
-    if (conditions.length)   { sql += ' WHERE ' + conditions.join(' AND '); }
+    if (category) { conditions.push('category = ?'); params.push(category); }
+    if (conditions.length) { sql += ' WHERE ' + conditions.join(' AND '); }
     sql += ' ORDER BY sort_order ASC, created_at DESC';
 
     const rows = await query(sql, params);
@@ -24,7 +24,7 @@ async function getAll(req, res) {
   }
 }
 
-// ── GET /api/projects/:idOrSlug ───────────────────────────────────────────────
+// GET /api/projects/:idOrSlug
 async function getOne(req, res) {
   try {
     const param = req.params.idOrSlug;
@@ -44,7 +44,7 @@ async function getOne(req, res) {
   }
 }
 
-// ── POST /api/projects ────────────────────────────────────────────────────────
+// POST /api/projects
 async function create(req, res) {
   try {
     const {
@@ -62,7 +62,6 @@ async function create(req, res) {
       return res.status(409).json({ success: false, message: `Slug "${slug}" already exists. Use a different title.` });
     }
 
-    // Mengambil URL Cloudinary dari middleware upload
     const image_url = req.file ? (req.file.path || req.file.filename) : '';
 
     const result = await query(
@@ -71,18 +70,18 @@ async function create(req, res) {
       [
         title,
         slug,
-        short_desc    || '',
-        description   || '',
+        short_desc || '',
+        description || '',
         image_url,
-        demo_url      || '',
-        repo_url      || '',
-        tech_stack    || '',
-        category      || 'General',
-        metric_users  || '',
-        metric_perf   || '',
+        demo_url || '',
+        repo_url || '',
+        tech_stack || '',
+        category || 'General',
+        metric_users || '',
+        metric_perf || '',
         metric_custom || '',
-        is_featured   ? 1 : 0,
-        sort_order    || 0
+        is_featured ? 1 : 0,
+        sort_order || 0
       ]
     );
 
@@ -98,7 +97,7 @@ async function create(req, res) {
   }
 }
 
-// ── PUT /api/projects/:id ─────────────────────────────────────────────────────
+// PUT /api/projects/:id
 async function update(req, res) {
   try {
     const existing = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [req.params.id]);
@@ -123,7 +122,6 @@ async function update(req, res) {
     }
 
     if (req.file) {
-      // Menggunakan URL Cloudinary baru; penghapusan file lokal ditiadakan
       data.image_url = req.file.path || req.file.filename;
     }
 
@@ -144,7 +142,7 @@ async function update(req, res) {
   }
 }
 
-// ── DELETE /api/projects/:id ──────────────────────────────────────────────────
+// DELETE /api/projects/:id
 async function remove(req, res) {
   try {
     const existing = await query('SELECT * FROM projects WHERE id = ? LIMIT 1', [req.params.id]);
@@ -152,7 +150,6 @@ async function remove(req, res) {
       return res.status(404).json({ success: false, message: 'Project not found.' });
     }
 
-    // Penghapusan file fisik lokal (fs.unlinkSync) ditiadakan karena file tersimpan di Cloudinary
     await query('DELETE FROM projects WHERE id = ?', [req.params.id]);
     return res.status(200).json({ success: true, message: 'Project deleted.' });
   } catch (err) {
@@ -161,4 +158,11 @@ async function remove(req, res) {
   }
 }
 
-module.exports = { getAll, getOne, create, update, remove, getProjects: getAll };
+// Pastikan ekspor sesuai dengan yang di-require di router
+module.exports = {
+  getAll,
+  getOne,
+  create,
+  update,
+  remove
+};
