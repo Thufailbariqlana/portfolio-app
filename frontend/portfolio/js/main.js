@@ -114,6 +114,19 @@ function t(key) { return (i18n[currentLang] || i18n.en)[key] || key; }
 function escHtml(str) {
   return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+/**
+ * Ensure a URL has a protocol so the browser doesn't treat it as a
+ * relative path (which would cause a Vercel 404).
+ * e.g. "github.com/user" → "https://github.com/user"
+ */
+function safeUrl(url) {
+  if (!url) return '';
+  const s = url.trim();
+  if (!s) return '';
+  if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('mailto:') || s.startsWith('tel:')) return s;
+  return 'https://' + s;
+}
 function fmtDate(dateStr) {
   if (!dateStr) return '';
   return new Date(dateStr).toLocaleDateString(currentLang === 'id' ? 'id-ID' : 'en-US',
@@ -269,7 +282,7 @@ function buildSocialButtons(profile, className, size = 17) {
   return SOCIALS
     .filter(s => profile[s.field])
     .map(s => `
-      <a href="${escHtml(profile[s.field])}" target="_blank" rel="noopener noreferrer"
+      <a href="${escHtml(safeUrl(profile[s.field]))}" target="_blank" rel="noopener noreferrer"
          class="${className}" title="${escHtml(s.label)}" aria-label="${escHtml(s.label)}">
         ${s.icon(size)}
       </a>`).join('');
@@ -359,7 +372,7 @@ async function loadProfile() {
       { icon: locIcon(),   label: 'Location',   val: p.location },
       { icon: mailIcon(),  label: 'Email',       val: p.email,   href: `mailto:${p.email}` },
       { icon: phoneIcon(), label: 'Phone',       val: p.phone },
-      { icon: linkIcon(),  label: 'Website',     val: p.website, href: p.website },
+      { icon: linkIcon(),  label: 'Website',     val: p.website, href: safeUrl(p.website) },
       { icon: expIcon(),   label: 'Experience',  val: p.years_of_exp ? `${p.years_of_exp} years` : '' },
     ].filter(i => i.val);
 
@@ -381,7 +394,7 @@ async function loadProfile() {
     aboutLinks.innerHTML = SOCIALS
       .filter(s => p[s.field])
       .map(s => `
-        <a href="${escHtml(p[s.field])}" target="_blank" rel="noopener noreferrer" class="about-link-btn">
+        <a href="${escHtml(safeUrl(p[s.field]))}" target="_blank" rel="noopener noreferrer" class="about-link-btn">
           ${s.icon()} ${escHtml(s.label)} ↗
         </a>`).join('');
   }

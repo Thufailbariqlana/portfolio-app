@@ -2,6 +2,14 @@
 
 // BASE is set in dashboard.js from AdminConfig.BASE (via config.js)
 
+// ── Normalize URL — ensure https:// prefix so links don't 404 on Vercel ──────
+function normalizeUrl(val) {
+  const s = (val || '').trim();
+  if (!s) return '';
+  if (s.startsWith('http://') || s.startsWith('https://')) return s;
+  return 'https://' + s;
+}
+
 // ── Load profile data ─────────────────────────────────────────────────────────
 async function loadProfile() {
   const r = await apiFetch('/profile');
@@ -50,13 +58,13 @@ async function saveProfile() {
     email:         document.getElementById('pEmail').value.trim(),
     phone:         document.getElementById('pPhone').value.trim(),
     location:      document.getElementById('pLocation').value.trim(),
-    website:       document.getElementById('pWebsite').value.trim(),
-    github_url:    document.getElementById('pGithub').value.trim(),
-    linkedin_url:  document.getElementById('pLinkedin').value.trim(),
-    twitter_url:    document.getElementById('pTwitter').value.trim(),
-    instagram_url:  document.getElementById('pInstagram').value.trim(),
-    facebook_url:   document.getElementById('pFacebook').value.trim(),
-    youtube_url:    document.getElementById('pYoutube').value.trim(),
+    website:       normalizeUrl(document.getElementById('pWebsite').value),
+    github_url:    normalizeUrl(document.getElementById('pGithub').value),
+    linkedin_url:  normalizeUrl(document.getElementById('pLinkedin').value),
+    twitter_url:   normalizeUrl(document.getElementById('pTwitter').value),
+    instagram_url: normalizeUrl(document.getElementById('pInstagram').value),
+    facebook_url:  normalizeUrl(document.getElementById('pFacebook').value),
+    youtube_url:   normalizeUrl(document.getElementById('pYoutube').value),
     years_of_exp:   Number(document.getElementById('pYears').value) || 0,
     open_to_work:  document.getElementById('pOpenToWork').checked ? 1 : 0
   };
