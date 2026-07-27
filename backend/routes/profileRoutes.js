@@ -1,9 +1,9 @@
 'use strict';
 
 const router = require('express').Router();
-const ctrl = require('../controllers/profileController');
+const ctrl   = require('../controllers/profileController');
 const { protect } = require('../middleware/authMiddleware');
-const { uploadToCloudinaryMiddleware } = require('../middleware/uploadMiddleware');
+const { uploadPhoto, uploadCV } = require('../middleware/uploadMiddleware');
 
 // GET /api/profile (public)
 router.get('/', ctrl.getProfile);
@@ -11,10 +11,10 @@ router.get('/', ctrl.getProfile);
 // PUT /api/profile (admin — text fields only)
 router.put('/', protect, ctrl.updateProfile);
 
-// POST /api/profile/photo (admin — langsung upload ke Cloudinary)
-router.post('/photo', protect, uploadToCloudinaryMiddleware('portfolio/photos', 'file'), ctrl.uploadPhoto);
+// POST /api/profile/photo (admin — upload foto ke Cloudinary, field 'photo')
+router.post('/photo', protect, uploadPhoto, ctrl.uploadPhoto);
 
-// POST /api/profile/cv (admin — langsung upload ke Cloudinary)
-router.post('/cv', protect, uploadToCloudinaryMiddleware('portfolio/cv', 'file'), ctrl.uploadCV);
+// POST /api/profile/cv (admin — upload CV ke Cloudinary, field 'cv')
+router.post('/cv', protect, uploadCV, ctrl.uploadCV);
 
 module.exports = router;

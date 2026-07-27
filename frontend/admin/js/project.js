@@ -15,7 +15,8 @@ async function loadProjects() {
   }
 
   tbody.innerHTML = projs.map(p => {
-    const imgSrc = p.image_url ? (API.replace('/api', '') + p.image_url) : 'https://via.placeholder.com/44x34?text=No+Img';
+    // Cloudinary sudah menyimpan URL penuh — tidak perlu prefix backend
+    const imgSrc = p.image_url || 'https://via.placeholder.com/44x34?text=No+Img';
     return `
       <tr>
         <td><img src="${imgSrc}" class="thumb" alt="Project thumbnail"/></td>
@@ -56,7 +57,8 @@ function openProjModal(proj = null) {
 
   const preview = document.getElementById('projImagePreview');
   if (proj?.image_url) {
-    preview.src = API.replace('/api', '') + proj.image_url;
+    // Cloudinary URL sudah absolute — gunakan langsung
+    preview.src = proj.image_url;
     preview.style.display = 'block';
   } else {
     preview.style.display = 'none';

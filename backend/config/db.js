@@ -72,19 +72,15 @@ async function query(sql, params = []) {
 
 // ── Connection test (called once on startup) ──────────────────────────────────
 async function testConnection() {
-  try {
-    const conn = await pool.getConnection();
-    const sslLabel = process.env.DB_SSL === 'true' ? ' (SSL/TLS ✅)' : '';
-    console.log(
-      `✅  MySQL connected${sslLabel}:`,
-      `${process.env.DB_HOST}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME}`
-    );
-    conn.release();
-  } catch (err) {
-    console.error('❌  MySQL connection failed:', err.message);
-    // In production, exit so the process manager (PM2 / Render) can restart
-    process.exit(1);
-  }
+  const conn = await pool.getConnection();
+  const sslLabel = process.env.DB_SSL === 'true' ? ' (SSL/TLS ✅)' : '';
+  console.log(
+    `✅  MySQL connected${sslLabel}:`,
+    `${process.env.DB_HOST}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME}`
+  );
+  conn.release();
+  // Tidak ada try/catch di sini — error di-throw ke caller (server.js)
+  // sehingga Vercel Serverless tidak crash permanen dengan process.exit()
 }
 
 // ── Dynamic SET clause builder ────────────────────────────────────────────────

@@ -22,7 +22,7 @@ async function login(req, res) {
       return res.status(400).json({ success: false, message: 'Username and password are required.' });
     }
 
-    const [rows] = await query(
+    const rows = await query(
       'SELECT id, username, email, password_hash, role FROM users WHERE username = ? LIMIT 1',
       [username.trim()]
     );
@@ -57,7 +57,7 @@ async function login(req, res) {
 // ── GET /api/auth/me ──────────────────────────────────────────────────────────
 async function getMe(req, res) {
   try {
-    const [rows] = await query(
+    const rows = await query(
       'SELECT id, username, email, role, created_at FROM users WHERE id = ? LIMIT 1',
       [req.user.id]
     );
@@ -83,7 +83,7 @@ async function changePassword(req, res) {
       return res.status(400).json({ success: false, message: 'New password must be at least 8 characters.' });
     }
 
-    const [rows] = await query('SELECT password_hash FROM users WHERE id = ? LIMIT 1', [req.user.id]);
+    const rows = await query('SELECT password_hash FROM users WHERE id = ? LIMIT 1', [req.user.id]);
     if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return res.status(404).json({ success: false, message: 'User not found.' });
     }

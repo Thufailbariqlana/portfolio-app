@@ -15,7 +15,8 @@ async function loadCertificates() {
   }
 
   tbody.innerHTML = certs.map(c => {
-    const imgSrc = c.image_url ? (API.replace('/api', '') + c.image_url) : 'https://via.placeholder.com/44x34?text=Cert';
+    // Cloudinary sudah menyimpan URL penuh — tidak perlu prefix backend
+    const imgSrc = c.image_url || 'https://via.placeholder.com/44x34?text=Cert';
     return `
       <tr>
         <td><img src="${imgSrc}" class="thumb" alt="Certificate image"/></td>
@@ -49,7 +50,8 @@ function openCertModal(cert = null) {
 
   const preview = document.getElementById('certImagePreview');
   if (cert?.image_url) {
-    preview.src = API.replace('/api', '') + cert.image_url;
+    // Cloudinary URL sudah absolute — gunakan langsung
+    preview.src = cert.image_url;
     preview.style.display = 'block';
   } else {
     preview.style.display = 'none';

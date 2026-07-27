@@ -33,8 +33,22 @@ app.use(helmet({
 }));
 
 // ── Safe & Production-Ready CORS ──────────────────────────────────────────────
+// Membaca daftar origin dari env CORS_ORIGINS (comma-separated, no trailing slash)
+// Contoh: https://portfolio.vercel.app,https://admin.vercel.app
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
 const corsOptions = {
-  origin: true, // Auto reflect origin pemanggil
+  origin: (origin, callback) => {
+    // Izinkan jika tidak ada origin (curl / server-to-server) atau origin ada di daftar
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    console.warn(`[CORS] Blocked origin: ${origin}`);
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-CSRF-Token']
@@ -118,7 +132,9 @@ if (!process.env.VERCEL) {
         console.log(`\n🚀 Portfolio API running local → http://localhost:${PORT}`);
       });
     } catch (dbErr) {
-      console.error('Failed to connect DB locally:', dbErr);
+      console.error('❌ Failed to connect DB locally:', dbErr.message);
+      // Lokal boleh exit agar developer langsung tahu ada masalah DB
+      process.exit(1);
     }
   })();
 }

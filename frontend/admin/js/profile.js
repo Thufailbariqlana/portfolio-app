@@ -21,17 +21,17 @@ async function loadProfile() {
   document.getElementById('pYears').value       = p.years_of_exp || 0;
   document.getElementById('pOpenToWork').checked = !!p.open_to_work;
 
-  // Photo & CV — use BASE from AdminConfig (set via dashboard.js)
+  // Photo & CV — Cloudinary menyimpan URL penuh, gunakan langsung tanpa prefix BASE
   const photoEl = document.getElementById('profilePhoto');
   const cvLink  = document.getElementById('cvLink');
   if (p.photo_url) {
-    photoEl.src = BASE + p.photo_url;
+    photoEl.src = p.photo_url;
   } else {
-    photoEl.src = 'https://ui-avatars.com/api/?name=Admin&size=88';
+    photoEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.full_name || 'Admin')}&size=88`;
   }
 
   if (p.cv_url) {
-    cvLink.href = BASE + p.cv_url;
+    cvLink.href = p.cv_url;
     cvLink.classList.remove('hidden');
   } else {
     cvLink.classList.add('hidden');

@@ -1,16 +1,23 @@
 -- ============================================================
 --  PORTFOLIO APP — DATABASE SCHEMA
---  Compatible with: PostgreSQL 14+ / MySQL 8+
---  Run: psql -U postgres -d portfolio_db -f schema.sql
---       OR: mysql -u root -p portfolio_db < schema.sql
+--  Compatible with: MySQL 8+ / Aiven MySQL
+--
+--  Local:  mysql -u root -p portfolio_db < schema.sql
+--  Aiven:  Jalankan via Query Editor di Aiven Console,
+--          atau: mysql -u avnadmin -p --ssl-mode=REQUIRED defaultdb < schema.sql
 -- ============================================================
 
 -- [1] DATABASE
+-- Untuk Aiven: defaultdb sudah ada, tidak perlu CREATE DATABASE.
+-- Untuk lokal: buat portfolio_db jika belum ada.
 CREATE DATABASE IF NOT EXISTS portfolio_db
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE portfolio_db;
+-- Aiven pakai: USE defaultdb;
+-- Lokal pakai:  USE portfolio_db;
+-- Ganti baris di bawah sesuai environment kamu:
+USE defaultdb;
 
 -- ============================================================
 -- [2] TABLE: users  (Admin accounts)
@@ -155,29 +162,31 @@ CREATE TABLE IF NOT EXISTS skills (
 -- [9] TABLE: contacts  (Messages from portfolio visitors)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS contacts (
-  id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  sender_name VARCHAR(120)  NOT NULL,
-  sender_email VARCHAR(120) NOT NULL,
-  subject     VARCHAR(200)  NOT NULL DEFAULT '',
-  message     TEXT          NOT NULL,
-  is_read     TINYINT(1)    NOT NULL DEFAULT 0,
-  replied_at  TIMESTAMP              DEFAULT NULL,
-  created_at  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id           INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  sender_name  VARCHAR(120)  NOT NULL,
+  sender_email VARCHAR(120)  NOT NULL,
+  subject      VARCHAR(200)  NOT NULL DEFAULT '',
+  message      TEXT          NOT NULL,
+  attachment   VARCHAR(255)           DEFAULT NULL,
+  is_read      TINYINT(1)    NOT NULL DEFAULT 0,
+  replied_at   TIMESTAMP              DEFAULT NULL,
+  created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   INDEX idx_read (is_read)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
 -- [10] DEFAULT ADMIN USER  (password: Admin@1234)
---  Hash generated with bcrypt rounds=12 — CHANGE IMMEDIATELY
+--  Hash valid untuk 'Admin@1234' dengan bcrypt rounds=12
+--  ⚠️  GANTI PASSWORD SEGERA setelah login pertama!
 -- ============================================================
 INSERT IGNORE INTO users (id, username, email, password_hash, role)
 VALUES (
   1,
   'admin',
   'admin@portfolio.dev',
-  '$2b$12$K9l2jQZ7Xm3NvPqR5wTuOeY1aHsIbGcFdE0nLkMpWoVtSuXrYzAiB',
+  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TiGxmFzQjDSHSBrpR2Qnl/4yNAe.',
   'admin'
 );
--- NOTE: Replace the hash above by running:
+-- NOTE: Generate hash baru dengan:
 --   node -e "const b=require('bcryptjs'); b.hash('YourNewPassword',12).then(console.log)"

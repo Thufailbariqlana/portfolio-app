@@ -1,7 +1,7 @@
 'use strict';
 
 const router = require('express').Router();
-const ctrl = require('../controllers/projectController');
+const ctrl   = require('../controllers/projectController');
 const { protect } = require('../middleware/authMiddleware');
 const { uploadProjectImage } = require('../middleware/uploadMiddleware');
 
@@ -11,10 +11,10 @@ router.get('/', ctrl.getAll);
 // GET /api/projects/:idOrSlug
 router.get('/:idOrSlug', ctrl.getOne);
 
-// POST /api/projects
+// POST /api/projects (upload field 'image')
 router.post('/', protect, uploadProjectImage, ctrl.create);
 
-// PUT /api/projects/:id
+// PUT /api/projects/:id (upload field 'image')
 router.put('/:id', protect, uploadProjectImage, ctrl.update);
 
 // DELETE /api/projects/:id
