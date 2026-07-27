@@ -6,12 +6,16 @@
 --  and you are updating it (not re-creating from scratch).
 --
 --  Aiven Console → Query Editor → paste & run:
+--
+--  ⚠️  NOTE: ADD COLUMN IF NOT EXISTS is NOT supported on
+--  older MySQL versions (Aiven). Use plain ADD COLUMN below.
+--  If you get "Duplicate column name" error, the column
+--  already exists — that is fine, no action needed.
 -- ============================================================
 
 USE defaultdb;
 
--- Add columns only if they don't already exist (idempotent)
 ALTER TABLE profile
-  ADD COLUMN IF NOT EXISTS instagram_url VARCHAR(255) NOT NULL DEFAULT '',
-  ADD COLUMN IF NOT EXISTS facebook_url  VARCHAR(255) NOT NULL DEFAULT '',
-  ADD COLUMN IF NOT EXISTS youtube_url   VARCHAR(255) NOT NULL DEFAULT '';
+  ADD COLUMN instagram_url VARCHAR(255) NOT NULL DEFAULT '',
+  ADD COLUMN facebook_url  VARCHAR(255) NOT NULL DEFAULT '',
+  ADD COLUMN youtube_url   VARCHAR(255) NOT NULL DEFAULT '';
