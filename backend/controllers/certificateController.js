@@ -2,6 +2,9 @@
 
 const { query, buildSetClause } = require('../config/db');
 
+// Extension fields added by migration v3 (may not exist in DB yet)
+const EXT_FIELDS = ['name_id'];
+
 // ── GET /api/certificates ─────────────────────────────────────────────────────
 async function getAll(req, res) {
   try {
@@ -38,29 +41,50 @@ async function create(req, res) {
 
     const image_url = req.file ? (req.file.path || req.file.secure_url || req.file.filename || '') : '';
 
-    const result = await query(
-      `INSERT INTO certificates (name, name_id, issuer, issue_date, expiry_date, credential_id, credential_url, image_url, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        name,
-        name_id       || '',
-        issuer,
-        issue_date,
-        expiry_date   || null,
-        credential_id || '',
-        credential_url|| '',
-        image_url,
-        sort_order ? parseInt(sort_order, 10) : 0,
-      ]
-    );
+    // Base columns — always present
+    const baseData = {
+      name, issuer, issue_date,
+      expiry_date:    expiry_date    || null,
+      credential_id:  credential_id  || '',
+      credential_url: credential_url || '',
+      image_url,
+      sort_order: sort_order ? parseInt(sort_order, 10) : 0
+    };
 
-    const insertId = result?.insertId || (Array.isArray(result) && result[0]?.insertId);
+    // Extension columns — only include if provided
+    const extData = {};
+    if (name_id !== undefined) extData.name_id = name_id || '';
+
+    let insertId;
+
+    try {
+      const data = { ...baseData, ...extData };
+      const cols = Object.keys(data).map(k => `\`${k}\``).join(', ');
+      const placeholders = Object.keys(data).map(() => '?').join(', ');
+      const result = await query(
+        `INSERT INTO certificates (${cols}) VALUES (${placeholders})`,
+        Object.values(data)
+      );
+      insertId = result.insertId;
+    } catch (dbErr) {
+      if (dbErr.code === 'ER_BAD_FIELD_ERROR') {
+        const cols = Object.keys(baseData).map(k => `\`${k}\``).join(', ');
+        const placeholders = Object.keys(baseData).map(() => '?').join(', ');
+        const result = await query(
+          `INSERT INTO certificates (${cols}) VALUES (${placeholders})`,
+          Object.values(baseData)
+        );
+        insertId = result.insertId;
+      } else {
+        throw dbErr;
+      }
+    }
+
     const created = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [insertId]);
-
     return res.status(201).json({
       success: true,
       message: 'Certificate created successfully.',
-      data: Array.isArray(created) ? created[0] : created || null,
+      data: Array.isArray(created) ? created[0] : created || null
     });
   } catch (err) {
     console.error('[certificateController.create]', err);
@@ -71,18 +95,15 @@ async function create(req, res) {
 // ── PUT /api/certificates/:id ─────────────────────────────────────────────────
 async function update(req, res) {
   try {
-    const existing = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT id FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Certificate not found.' });
     }
 
-    const allowed = ['name', 'name_id', 'issuer', 'issue_date', 'expiry_date', 'credential_id', 'credential_url', 'sort_order'];
+    const baseAllowed = ['name', 'issuer', 'issue_date', 'expiry_date', 'credential_id', 'credential_url', 'sort_order'];
     const data = {};
-
-    allowed.forEach((f) => {
-      if (req.body && req.body[f] !== undefined) {
-        data[f] = req.body[f];
-      }
+    [...baseAllowed, ...EXT_FIELDS].forEach(f => {
+      if (req.body && req.body[f] !== undefined) data[f] = req.body[f];
     });
 
     if (req.file) {
@@ -93,14 +114,27 @@ async function update(req, res) {
       return res.status(400).json({ success: false, message: 'No valid fields provided for update.' });
     }
 
-    const { clause, values } = buildSetClause(data);
-    await query(`UPDATE certificates SET ${clause} WHERE id = ?`, [...values, req.params.id]);
+    try {
+      const { clause, values } = buildSetClause(data);
+      await query(`UPDATE certificates SET ${clause} WHERE id = ?`, [...values, req.params.id]);
+    } catch (dbErr) {
+      if (dbErr.code === 'ER_BAD_FIELD_ERROR') {
+        EXT_FIELDS.forEach(f => delete data[f]);
+        if (Object.keys(data).length === 0) {
+          return res.status(400).json({ success: false, message: 'No valid fields provided for update.' });
+        }
+        const { clause, values } = buildSetClause(data);
+        await query(`UPDATE certificates SET ${clause} WHERE id = ?`, [...values, req.params.id]);
+      } else {
+        throw dbErr;
+      }
+    }
 
     const updated = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
     return res.status(200).json({
       success: true,
       message: 'Certificate updated successfully.',
-      data: Array.isArray(updated) ? updated[0] : updated || null,
+      data: Array.isArray(updated) ? updated[0] : updated || null
     });
   } catch (err) {
     console.error('[certificateController.update]', err);
@@ -111,11 +145,10 @@ async function update(req, res) {
 // ── DELETE /api/certificates/:id ──────────────────────────────────────────────
 async function remove(req, res) {
   try {
-    const existing = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
+    const existing = await query('SELECT id FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
     if (!existing || !Array.isArray(existing) || existing.length === 0) {
       return res.status(404).json({ success: false, message: 'Certificate not found.' });
     }
-
     await query('DELETE FROM certificates WHERE id = ?', [req.params.id]);
     return res.status(200).json({ success: true, message: 'Certificate deleted successfully.' });
   } catch (err) {
