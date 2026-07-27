@@ -1,14 +1,17 @@
 'use strict';
 
 /* ================================================================
-   PORTFOLIO MAIN — main.js  v2.0
-   Features:
-   - Dynamic project category tabs (All + per-category)
-   - Language toggle (EN / ID) with full i18n
-   - Theme toggle (dark / light)
-   - Social media icons (hero, footer, mobile nav, contact)
-   - Back-to-top button
-   - Cloudinary-safe image URLs (no BASE prefix)
+   PORTFOLIO MAIN — main.js  v3.0
+   New in v3:
+   - Typing animation (hero title cycles through roles)
+   - Scroll progress bar (top of page)
+   - Project search input (real-time filter by title/tech/desc)
+   - Project hover overlay with quick-view detail
+   - Photo float animation
+   - Cloudinary URL auto-optimization (webp + auto quality)
+   - JSON-LD structured data (Person schema)
+   - Canonical URL tag
+   - Hire Me CTA section (i18n + open_to_work aware)
    ================================================================ */
 
 // ── Config ───────────────────────────────────────────────────────
@@ -45,8 +48,16 @@ const i18n = {
     'section.certificatesSub': 'Professional certifications',
     'section.contact':      'Get In Touch',
     'section.contactSub':   "Have a project in mind? Let's talk.",
-    'projects.all':     'All',
-    'projects.empty':   'No projects found.',
+    'projects.all':       'All',
+    'projects.empty':     'No projects found.',
+    'projects.search':    'Search projects…',
+    'hire.available':     'Available for new projects',
+    'hire.title':         "Let's Work Together",
+    'hire.sub':           "I'm open to freelance projects, full-time roles, and interesting collaborations. Got something in mind?",
+    'hire.remote':        '🌍 Remote-friendly',
+    'hire.freelance':     '💼 Freelance / Full-time',
+    'hire.collab':        '🤝 Open Source',
+    'hire.cta':           'Get In Touch →',
     'contact.name':     'Full Name *',
     'contact.email':    'Email Address *',
     'contact.subject':  'Subject',
@@ -88,8 +99,16 @@ const i18n = {
     'section.certificatesSub': 'Sertifikasi profesional',
     'section.contact':      'Hubungi Saya',
     'section.contactSub':   'Punya proyek? Mari bicara.',
-    'projects.all':     'Semua',
-    'projects.empty':   'Tidak ada proyek ditemukan.',
+    'projects.all':       'Semua',
+    'projects.empty':     'Tidak ada proyek ditemukan.',
+    'projects.search':    'Cari proyek…',
+    'hire.available':     'Tersedia untuk proyek baru',
+    'hire.title':         'Mari Bekerja Sama',
+    'hire.sub':           'Saya terbuka untuk proyek freelance, posisi penuh waktu, dan kolaborasi menarik. Punya sesuatu di benak Anda?',
+    'hire.remote':        '🌍 Ramah Remote',
+    'hire.freelance':     '💼 Freelance / Penuh Waktu',
+    'hire.collab':        '🤝 Open Source',
+    'hire.cta':           'Hubungi Saya →',
     'contact.name':     'Nama Lengkap *',
     'contact.email':    'Alamat Email *',
     'contact.subject':  'Subjek',
@@ -171,6 +190,22 @@ function setText(id, val) {
   if (el) el.textContent = val;
 }
 
+/**
+ * Cloudinary URL optimizer — injects c_limit,w_900,f_webp,q_auto
+ * into a Cloudinary delivery URL so the browser gets a compressed
+ * WebP image instead of the original. Falls back to original URL if
+ * the URL is not a Cloudinary URL (e.g. placeholder).
+ */
+function cloudinaryOptimize(url, width = 900) {
+  if (!url) return '';
+  if (!url.includes('res.cloudinary.com')) return url;
+  // Insert transformation after /upload/
+  return url.replace(
+    '/upload/',
+    `/upload/c_limit,w_${width},f_webp,q_auto/`
+  );
+}
+
 // ── Apply i18n to DOM ─────────────────────────────────────────────
 function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -244,6 +279,65 @@ let _cachedCerts       = null;
   });
 })();
 
+// ── Scroll Progress Bar ───────────────────────────────────────────
+(function initScrollProgress() {
+  const bar = document.getElementById('scrollProgress');
+  if (!bar) return;
+  window.addEventListener('scroll', () => {
+    const scrollTop  = window.scrollY;
+    const docHeight  = document.documentElement.scrollHeight - window.innerHeight;
+    const pct        = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    bar.style.width  = pct + '%';
+  }, { passive: true });
+})();
+
+// ── Typing Animation ──────────────────────────────────────────────
+// _typingRoles is populated by loadProfile() from the DB title field.
+// Falls back to a generic list if profile hasn't loaded yet.
+let _typingRoles = ['Developer', 'Designer', 'Problem Solver'];
+let _typingIdx   = 0;
+let _charIdx     = 0;
+let _typingDir   = 'type'; // 'type' | 'erase'
+let _typingTimer = null;
+
+function startTyping(roles) {
+  if (!roles || !roles.length) return;
+  _typingRoles = roles;
+  _typingIdx   = 0;
+  _charIdx     = 0;
+  _typingDir   = 'type';
+  clearTimeout(_typingTimer);
+  _typeTick();
+}
+
+function _typeTick() {
+  const el = document.getElementById('typingText');
+  if (!el) return;
+  const full = _typingRoles[_typingIdx] || '';
+
+  if (_typingDir === 'type') {
+    _charIdx++;
+    el.textContent = full.slice(0, _charIdx);
+    if (_charIdx >= full.length) {
+      // Pause at end before erasing
+      _typingTimer = setTimeout(() => { _typingDir = 'erase'; _typeTick(); }, 2000);
+      return;
+    }
+    _typingTimer = setTimeout(_typeTick, 70);
+  } else {
+    _charIdx--;
+    el.textContent = full.slice(0, _charIdx);
+    if (_charIdx <= 0) {
+      // Move to next role
+      _typingIdx = (_typingIdx + 1) % _typingRoles.length;
+      _typingDir = 'type';
+      _typingTimer = setTimeout(_typeTick, 350);
+      return;
+    }
+    _typingTimer = setTimeout(_typeTick, 38);
+  }
+}
+
 // ── Navbar ────────────────────────────────────────────────────────
 (function initNavbar() {
   const navbar = document.getElementById('navbar');
@@ -256,7 +350,7 @@ let _cachedCerts       = null;
   }, { passive: true });
 
   // Active nav link on scroll
-  const sections = ['about','experience','projects','skills','education','certificates','contact'];
+  const sections = ['about','experience','projects','skills','education','certificates','hire','contact'];
   const observer = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) {
@@ -331,7 +425,12 @@ function linkIcon()  { return `<svg width="17" height="17" fill="none" stroke="c
 // Extracted so it can be called again on language toggle
 function rerenderProfile(p) {
   if (!p) return;
-  setText('heroTitle', loc('title', p));
+  // Typing animation: restart with new language roles
+  const title    = loc('title', p);
+  const extra    = currentLang === 'id'
+    ? ['Pengembang Web', 'Pemecah Masalah', 'Pembuat Solusi']
+    : ['Web Developer', 'Problem Solver', 'Solution Builder'];
+  startTyping([title, ...extra]);
   setText('heroBio',   loc('bio', p));
   setText('aboutBio',  loc('bio', p));
 }
@@ -341,14 +440,39 @@ async function loadProfile() {
   if (!p) return;
   _cachedProfile = p;
 
-  // Meta tags
+  // ── Canonical URL ─────────────────────────────────────────────
+  const canon = document.getElementById('canonicalUrl');
+  if (canon) canon.href = window.location.href.split('?')[0].split('#')[0];
+
+  // ── Meta tags ─────────────────────────────────────────────────
   document.title = `${p.full_name || 'Portfolio'} · Portfolio`;
   const metaDesc = document.getElementById('metaDesc');
-  if (metaDesc) metaDesc.content = loc('bio', p);
+  if (metaDesc) metaDesc.content = (loc('bio', p) || '').substring(0, 160);
   const ogTitle  = document.getElementById('ogTitle');
   if (ogTitle)  ogTitle.content  = `${p.full_name} — ${loc('title', p)}`;
   const ogDesc   = document.getElementById('ogDesc');
-  if (ogDesc)   ogDesc.content   = loc('bio', p);
+  if (ogDesc)   ogDesc.content   = (loc('bio', p) || '').substring(0, 160);
+
+  // ── JSON-LD Person structured data ────────────────────────────
+  const jsonLdEl = document.getElementById('jsonLd');
+  if (jsonLdEl) {
+    const ld = {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      'name': p.full_name || '',
+      'jobTitle': p.title || '',
+      'description': p.bio || '',
+      'email': p.email || '',
+      'telephone': p.phone || '',
+      'url': p.website || window.location.origin,
+      'image': p.photo_url || '',
+      'sameAs': [
+        p.github_url, p.linkedin_url, p.twitter_url,
+        p.instagram_url, p.facebook_url, p.youtube_url
+      ].filter(Boolean)
+    };
+    jsonLdEl.textContent = JSON.stringify(ld);
+  }
 
   // ── Hero ───────────────────────────────────────────────────────
   const firstName = (p.full_name || '').split(' ')[0];
@@ -356,17 +480,22 @@ async function loadProfile() {
   if (heroNameEl) {
     heroNameEl.innerHTML = `Hi, I'm <span class="accent">${escHtml(p.full_name || 'Your Name')}</span>`;
   }
-  setText('heroTitle', loc('title', p));
-  setText('heroBio',   loc('bio', p));
+  // Start typing animation with title + extra roles
+  const titleText = loc('title', p);
+  const extraRoles = currentLang === 'id'
+    ? ['Pengembang Web', 'Pemecah Masalah', 'Pembuat Solusi']
+    : ['Web Developer', 'Problem Solver', 'Solution Builder'];
+  startTyping([titleText, ...extraRoles]);
+  setText('heroBio', loc('bio', p));
 
   // Badge
   const badgeWrap = document.getElementById('heroBadge')?.parentElement;
   if (badgeWrap) badgeWrap.style.display = p.open_to_work ? '' : 'none';
 
-  // Photo
+  // Photo — use Cloudinary-optimized URL (WebP, 600px max)
   if (p.photo_url) {
     const img = document.getElementById('heroPhoto');
-    if (img) img.src = p.photo_url; // Cloudinary absolute URL
+    if (img) img.src = cloudinaryOptimize(p.photo_url, 600);
   }
 
   // CV
@@ -464,6 +593,13 @@ async function loadProfile() {
   const socialLinks = document.getElementById('socialLinks');
   if (socialLinks) {
     socialLinks.innerHTML = buildSocialButtons(p, 'social-link');
+  }
+
+  // ── Hire Me section ───────────────────────────────────────────
+  // Hide entire section if not open to work
+  const hireSection = document.getElementById('hire');
+  if (hireSection) {
+    hireSection.style.display = p.open_to_work ? '' : 'none';
   }
 }
 
@@ -577,10 +713,14 @@ function renderProjects(projects) {
 
   grid.innerHTML = projects.map((p, idx) => {
     const projTitle    = loc('title', p);
-    const projShort    = loc('short_desc', p) || loc('description', p).substring(0, 120);
+    const projShort    = loc('short_desc', p) || loc('description', p).substring(0, 140);
+    const projDesc     = loc('description', p) || projShort;
+    // Use Cloudinary-optimized image (WebP, 700px)
+    const optImg = cloudinaryOptimize(p.image_url, 700);
     const imgEl = p.image_url
       ? `<div class="project-img-wrap">
-           <img src="${escHtml(p.image_url)}" alt="${escHtml(projTitle)}" class="project-img" loading="lazy"
+           <img src="${escHtml(optImg)}" alt="${escHtml(projTitle)}" class="project-img" loading="lazy"
+                width="700" height="190"
                 onerror="this.parentNode.innerHTML='<div class=&quot;project-img-placeholder&quot;>No Image</div>'"/>
            <div class="project-img-overlay"></div>
          </div>`
@@ -589,9 +729,21 @@ function renderProjects(projects) {
     const metrics = [p.metric_users, p.metric_perf, p.metric_custom].filter(Boolean);
     const tagList = (p.tech_stack || '').split(',').map(t2 => t2.trim()).filter(Boolean);
 
+    // Hover overlay with full description + quick links
+    const hoverLinks = [
+      p.demo_url ? `<a href="${escHtml(p.demo_url)}" target="_blank" rel="noopener" class="project-hover-btn primary">Demo ↗</a>` : '',
+      p.repo_url ? `<a href="${escHtml(p.repo_url)}" target="_blank" rel="noopener" class="project-hover-btn">Repo ↗</a>` : ''
+    ].filter(Boolean).join('');
+
     return `
       <article class="project-card" style="animation-delay:${idx * 60}ms">
         ${imgEl}
+        <!-- Hover overlay -->
+        <div class="project-hover-overlay">
+          <div class="project-hover-title">${escHtml(projTitle)}</div>
+          <div class="project-hover-desc">${escHtml(projDesc)}</div>
+          <div class="project-hover-links">${hoverLinks}</div>
+        </div>
         <div class="project-body">
           <div class="project-category">${escHtml(p.category || 'Project')}</div>
           <h3 class="project-title">${escHtml(projTitle)}</h3>
@@ -715,9 +867,10 @@ function rerenderCerts(certs) {
   }
 
   grid.innerHTML = certs.map(c => {
-    const certName = loc('name', c);
+    const certName   = loc('name', c);
+    const certOptImg = cloudinaryOptimize(c.image_url, 600);
     const imgEl = c.image_url
-      ? `<div class="cert-img-wrap"><img src="${escHtml(c.image_url)}" alt="${escHtml(certName)}" class="cert-img" loading="lazy" onerror="this.parentNode.innerHTML='<div class=&quot;cert-img-placeholder&quot;></div>'"/></div>`
+      ? `<div class="cert-img-wrap"><img src="${escHtml(certOptImg)}" alt="${escHtml(certName)}" class="cert-img" loading="lazy" width="600" height="140" onerror="this.parentNode.innerHTML='<div class=&quot;cert-img-placeholder&quot;></div>'"/></div>`
       : `<div class="cert-img-placeholder">
            <svg width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:var(--muted)">
              <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
@@ -817,6 +970,46 @@ async function loadCertificates() {
   });
 })();
 
+// ── Project Search ────────────────────────────────────────────────
+(function initProjectSearch() {
+  const input = document.getElementById('projectSearch');
+  const clear = document.getElementById('projectSearchClear');
+  if (!input) return;
+
+  function doSearch(query) {
+    const q = query.trim().toLowerCase();
+    clear?.classList.toggle('hidden', !q);
+    if (!allProjects.length) return;
+
+    if (!q) {
+      // Restore current tab filter
+      filterProjects(currentFilter, null);
+      return;
+    }
+
+    // Search across all projects regardless of active tab
+    const matched = allProjects.filter(p => {
+      const title = (loc('title', p) + ' ' + (p.title || '')).toLowerCase();
+      const tech  = (p.tech_stack || '').toLowerCase();
+      const desc  = (loc('description', p) + ' ' + loc('short_desc', p)).toLowerCase();
+      const cat   = (p.category || '').toLowerCase();
+      return title.includes(q) || tech.includes(q) || desc.includes(q) || cat.includes(q);
+    });
+
+    renderProjects(matched);
+    // Deactivate tab pills visually while searching
+    document.querySelectorAll('.proj-tab').forEach(b => b.classList.remove('active'));
+  }
+
+  input.addEventListener('input', () => doSearch(input.value));
+  clear?.addEventListener('click', () => {
+    input.value = '';
+    clear.classList.add('hidden');
+    filterProjects(currentFilter, null);
+    input.focus();
+  });
+})();
+
 // ── Init ──────────────────────────────────────────────────────────
 (async function init() {
   applyI18n(); // apply saved language on load
@@ -832,4 +1025,8 @@ async function loadCertificates() {
 
   // Apply i18n again after data is loaded (updates dynamic strings)
   applyI18n();
+
+  // Update search placeholder with correct language
+  const si = document.getElementById('projectSearch');
+  if (si) si.placeholder = t('projects.search');
 })();

@@ -6,10 +6,17 @@
   <meta name="description" id="metaDesc" content="Professional portfolio website"/>
   <meta property="og:title" id="ogTitle" content="Portfolio"/>
   <meta property="og:description" id="ogDesc" content=""/>
+  <link rel="canonical" id="canonicalUrl" href=""/>
   <title id="pageTitle">Portfolio</title>
   <link rel="stylesheet" href="css/style.css"/>
+
+  <!-- JSON-LD Structured Data (Person) — populated dynamically by JS -->
+  <script type="application/ld+json" id="jsonLd">{}</script>
 </head>
 <body>
+
+<!-- ═══════════════════ SCROLL PROGRESS BAR ═════════════════ -->
+<div class="scroll-progress" id="scrollProgress"></div>
 
 <!-- ═══════════════════════ NAVBAR ═══════════════════════════ -->
 <nav id="navbar">
@@ -39,11 +46,9 @@
 
       <!-- Theme Toggle -->
       <button class="nav-ctrl-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
-        <!-- Moon (dark mode icon) -->
         <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
         </svg>
-        <!-- Sun (light mode icon) -->
         <svg id="iconSun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden">
           <circle cx="12" cy="12" r="5"/>
           <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
@@ -71,7 +76,6 @@
   <a href="#education"    onclick="closeMobileNav()" data-i18n="nav.education">Education</a>
   <a href="#certificates" onclick="closeMobileNav()" data-i18n="nav.certificates">Certificates</a>
   <a href="#contact"      onclick="closeMobileNav()" data-i18n="nav.contact">Contact</a>
-  <!-- Mobile social icons -->
   <div class="mobile-nav-socials" id="mobileNavSocials"></div>
 </div>
 
@@ -91,7 +95,10 @@
       <h1 class="hero-name" id="heroName">
         Hi, I'm <span class="accent" id="heroFirstName">Your Name</span>
       </h1>
-      <p class="hero-title" id="heroTitle">Full-Stack Developer</p>
+      <!-- Typing animation container -->
+      <p class="hero-title" id="heroTitle">
+        <span id="typingText"></span><span class="typing-cursor">|</span>
+      </p>
       <p class="hero-bio" id="heroBio">Loading…</p>
 
       <div class="hero-actions">
@@ -137,7 +144,8 @@
       <div class="hero-photo-ring-2"></div>
       <img id="heroPhoto"
            src="https://ui-avatars.com/api/?name=Dev&size=280&background=1e293b&color=3b82f6"
-           alt="Profile photo" class="hero-photo"/>
+           alt="Profile photo" class="hero-photo float-photo"
+           width="280" height="280"/>
     </div>
   </div>
 
@@ -185,9 +193,19 @@
       <h2 class="section-title" data-i18n="section.projects">Projects</h2>
     </div>
     <p class="section-subtitle" data-i18n="section.projectsSub">Things I've built</p>
-    <!-- Category tabs — rendered dynamically by JS -->
-    <div class="proj-tabs-wrap">
-      <div class="proj-tabs" id="projectsFilter" role="tablist"></div>
+    <!-- Search + Category tabs -->
+    <div class="proj-controls">
+      <div class="proj-search-wrap">
+        <svg class="proj-search-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="projectSearch" class="proj-search-input"
+               placeholder="Search projects…" autocomplete="off"/>
+        <button class="proj-search-clear hidden" id="projectSearchClear" aria-label="Clear search">✕</button>
+      </div>
+      <div class="proj-tabs-wrap">
+        <div class="proj-tabs" id="projectsFilter" role="tablist"></div>
+      </div>
     </div>
     <div id="projectsLoading" class="loading-wrap">
       <div class="spinner-ring"></div>
@@ -236,6 +254,29 @@
       <div class="spinner-ring"></div>
     </div>
     <div class="certs-grid" id="certsGrid" style="display:none"></div>
+  </div>
+</section>
+
+<!-- ════════════════════ HIRE ME CTA ═════════════════════════ -->
+<section id="hire" class="section-hire">
+  <div class="container fade-in">
+    <div class="hire-card">
+      <div class="hire-glow"></div>
+      <div class="hire-content">
+        <div class="hire-badge" id="hireBadge">
+          <span class="dot dot-green"></span>
+          <span id="hireAvailText" data-i18n="hire.available">Available for new projects</span>
+        </div>
+        <h2 class="hire-title" id="hireTitle" data-i18n="hire.title">Let's Work Together</h2>
+        <p class="hire-sub" id="hireSub" data-i18n="hire.sub">I'm open to freelance projects, full-time roles, and interesting collaborations. Got something in mind?</p>
+        <div class="hire-prefs" id="hirePrefs">
+          <span class="hire-pref" data-i18n="hire.remote">🌍 Remote-friendly</span>
+          <span class="hire-pref" data-i18n="hire.freelance">💼 Freelance / Full-time</span>
+          <span class="hire-pref" data-i18n="hire.collab">🤝 Open Source</span>
+        </div>
+        <a href="#contact" class="btn-primary hire-cta" data-i18n="hire.cta">Get In Touch →</a>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -304,7 +345,7 @@
   </svg>
 </button>
 
-<script src="js/config.js?v=2.0.0"></script>
-<script src="js/main.js?v=2.0.0"></script>
+<script src="js/config.js?v=3.0.0"></script>
+<script src="js/main.js?v=3.0.0"></script>
 </body>
 </html>

@@ -84,6 +84,17 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth', authLimiter);
 
+// ── Public Cache Middleware ───────────────────────────────────────────────────
+// Adds Cache-Control: public, max-age=300 (5 min) to GET responses only.
+// PUT / POST / DELETE (admin writes) pass through untouched because those
+// routes are mounted *without* this middleware.
+function setPublicCache(req, res, next) {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+  }
+  next();
+}
+
 // ── Health Checks ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({
@@ -100,12 +111,13 @@ app.get('/', (_req, res) => {
 
 // ── API Routes Mount ──────────────────────────────────────────────────────────
 app.use('/api/auth',         authRoutes);
-app.use('/api/profile',      profileRoutes);
-app.use('/api/experiences',  experienceRoutes);
-app.use('/api/projects',     projectRoutes);
-app.use('/api/education',    educationRoutes);
-app.use('/api/certificates', certificateRoutes);
-app.use('/api/skills',       skillRoutes);
+// Public read-only routes get cache headers
+app.use('/api/profile',      setPublicCache, profileRoutes);
+app.use('/api/experiences',  setPublicCache, experienceRoutes);
+app.use('/api/projects',     setPublicCache, projectRoutes);
+app.use('/api/education',    setPublicCache, educationRoutes);
+app.use('/api/certificates', setPublicCache, certificateRoutes);
+app.use('/api/skills',       setPublicCache, skillRoutes);
 app.use('/api/contacts',     contactRoutes);
 
 // ── 404 Handler ───────────────────────────────────────────────────────────────
