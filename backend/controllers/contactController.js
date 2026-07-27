@@ -60,47 +60,50 @@ async function submit(req, res) {
   }
 }
 
-// ── GET /api/contacts ─────────────────────────────────────────────────────────
-async function getAll(req, res) {
+// ── POST /api/contacts ────────────────────────────────────────────────────────
+async function submit(req, res) {
   try {
-    const { unread } = req.query;
-    let sql = 'SELECT * FROM contacts';
-    const params = [];
-    if (unread === 'true') { sql += ' WHERE is_read = 0'; }
-    sql += ' ORDER BY created_at DESC';
+    const sender_name = req.body.sender_name || req.body.name;
+    const sender_email = req.body.sender_email || req.body.email;
+    const { subject, message, attachment } = req.body;
 
-    const [rows] = await query(sql, params);
-    const [countRows] = await query('SELECT COUNT(*) AS total FROM contacts WHERE is_read = 0');
-
-    const totalUnread = (countRows && countRows.length > 0) ? countRows[0].total : 0;
-
-    return res.status(200).json({
-      success: true,
-      data: Array.isArray(rows) ? rows : [],
-      unread_count: totalUnread
-    });
-  } catch (err) {
-    console.error('[contactController.getAll]', err);
-    return res.status(500).json({ success: false, message: 'Server error.' });
-  }
-}
-
-// ── GET /api/contacts/:id ─────────────────────────────────────────────────────
-async function getOne(req, res) {
-  try {
-    const [rows] = await query('SELECT * FROM contacts WHERE id = ? LIMIT 1', [req.params.id]);
-    if (!rows || !Array.isArray(rows) || rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Contact message not found.' });
+    if (!sender_name || !sender_email || !message) {
+      return res.status(400).json({ success: false, message: 'Name, email, and message are required.' });
     }
 
-    if (!rows[0].is_read) {
-      await query('UPDATE contacts SET is_read = 1 WHERE id = ?', [req.params.id]);
-      rows[0].is_read = 1;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(sender_email)) {
+      return res.status(400).json({ success: false, message: 'Invalid email address.' });
     }
 
-    return res.status(200).json({ success: true, data: rows[0] });
+    // Simpan data beserta attachment (jika ada) ke database
+    const result = await query(
+      'INSERT INTO contacts (sender_name, sender_email, subject, message, attachment) VALUES (?, ?, ?, ?, ?)',
+      [
+        sender_name.trim(), 
+        sender_email.trim(), 
+        (subject || '').trim(), 
+        message.trim(),
+        attachment ? String(attachment).trim() : null
+      ]
+    );
+
+    const transporter = getTransporter();
+    if (transporter && process.env.NOTIFY_EMAIL) {
+      transporter.sendMail({
+        from:    process.env.SMTP_FROM || process.env.SMTP_USER,
+        to:      process.env.NOTIFY_EMAIL,
+        subject: `[Portfolio Contact] ${subject || 'New Message'} — from ${sender_name}`,
+        text:    `From: ${sender_name} <${sender_email}>\n\n${message}`
+      }).catch(e => console.error('[contactController] Email send failed:', e.message));
+    }
+
+    const [created] = await query('SELECT * FROM contacts WHERE id = ? LIMIT 1', [result.insertId]);
+    const createdRecord = Array.isArray(created) ? created[0] : created;
+
+    return res.status(201).json({ success: true, message: 'Message sent. Thank you!', data: createdRecord });
   } catch (err) {
-    console.error('[contactController.getOne]', err);
+    console.error('[contactController.submit]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
   }
 }
