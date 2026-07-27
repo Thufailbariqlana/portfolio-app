@@ -200,8 +200,14 @@
             <div class="form-group"><label>Title / Position</label>
               <input type="text" id="pTitle" placeholder="e.g. Full-Stack Developer"/></div>
           </div>
-          <div class="form-group"><label>Bio</label>
-            <textarea id="pBio" rows="4" placeholder="Write a short bio…"></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>🇮🇩 Title (Bahasa Indonesia)</label>
+              <input type="text" id="pTitleId" placeholder="Contoh: Pengembang Full-Stack"/></div>
+          </div>
+          <div class="form-group"><label>Bio (English)</label>
+            <textarea id="pBio" rows="3" placeholder="Write a short bio…"></textarea></div>
+          <div class="form-group"><label>🇮🇩 Bio (Bahasa Indonesia)</label>
+            <textarea id="pBioId" rows="3" placeholder="Tulis bio singkat dalam bahasa Indonesia…"></textarea></div>
           <div class="form-row">
             <div class="form-group"><label>Email</label>
               <input type="email" id="pEmail" placeholder="you@example.com"/></div>
@@ -378,9 +384,11 @@
       <div class="form-row">
         <div class="form-group"><label>Company *</label>
           <input type="text" id="expCompany" placeholder="Company name"/></div>
-        <div class="form-group"><label>Position *</label>
+        <div class="form-group"><label>Position * (English)</label>
           <input type="text" id="expPosition" placeholder="Job title"/></div>
       </div>
+      <div class="form-group"><label>🇮🇩 Position (Bahasa Indonesia)</label>
+        <input type="text" id="expPositionId" placeholder="Contoh: Pengembang Backend"/></div>
       <div class="form-group"><label>Location</label>
         <input type="text" id="expLocation" placeholder="City, Country (Remote)"/></div>
       <div class="form-row">
@@ -395,8 +403,10 @@
           <label for="expIsCurrent" style="margin:0;font-weight:400">Currently working here</label>
         </div>
       </div>
-      <div class="form-group"><label>Description</label>
-        <textarea id="expDesc" rows="3" placeholder="Key responsibilities and achievements…"></textarea></div>
+      <div class="form-group"><label>Description (English)</label>
+        <textarea id="expDesc" rows="2" placeholder="Key responsibilities and achievements…"></textarea></div>
+      <div class="form-group"><label>🇮🇩 Deskripsi (Bahasa Indonesia)</label>
+        <textarea id="expDescId" rows="2" placeholder="Tanggung jawab dan pencapaian utama…"></textarea></div>
       <div class="form-group"><label>Tech Stack</label>
         <input type="text" id="expTech" placeholder="React, Node.js, PostgreSQL (comma separated)"/></div>
       <div class="form-group"><label>Sort Order</label>
@@ -418,12 +428,24 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="projId"/>
-      <div class="form-group"><label>Title *</label>
-        <input type="text" id="projTitle" placeholder="Project name"/></div>
-      <div class="form-group"><label>Short Description</label>
-        <input type="text" id="projShortDesc" placeholder="One-line summary (max 300 chars)"/></div>
-      <div class="form-group"><label>Full Description</label>
-        <textarea id="projDesc" rows="4" placeholder="Detailed project description…"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Title * (English)</label>
+          <input type="text" id="projTitle" placeholder="Project name"/></div>
+        <div class="form-group"><label>🇮🇩 Judul (Bahasa Indonesia)</label>
+          <input type="text" id="projTitleId" placeholder="Nama proyek dalam bahasa Indonesia"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Short Description (English)</label>
+          <input type="text" id="projShortDesc" placeholder="One-line summary (max 300 chars)"/></div>
+        <div class="form-group"><label>🇮🇩 Deskripsi Singkat (Indonesia)</label>
+          <input type="text" id="projShortDescId" placeholder="Ringkasan satu baris (maks 300 karakter)"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Full Description (English)</label>
+          <textarea id="projDesc" rows="3" placeholder="Detailed project description…"></textarea></div>
+        <div class="form-group"><label>🇮🇩 Deskripsi Lengkap (Indonesia)</label>
+          <textarea id="projDescId" rows="3" placeholder="Deskripsi proyek secara lengkap…"></textarea></div>
+      </div>
       <div class="form-group"><label>Project Image</label>
         <input type="file" id="projImage" accept="image/*"/>
         <img id="projImagePreview" src="" alt="" style="max-height:80px;margin-top:.5rem;display:none;border-radius:4px;"/>
@@ -478,10 +500,16 @@
       <div class="form-group"><label>Institution *</label>
         <input type="text" id="eduInstitution" placeholder="University / School name"/></div>
       <div class="form-row">
-        <div class="form-group"><label>Degree *</label>
+        <div class="form-group"><label>Degree * (English)</label>
           <input type="text" id="eduDegree" placeholder="Bachelor's, Master's…"/></div>
-        <div class="form-group"><label>Field of Study</label>
+        <div class="form-group"><label>🇮🇩 Gelar (Indonesia)</label>
+          <input type="text" id="eduDegreeId" placeholder="Sarjana, Magister…"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Field of Study (English)</label>
           <input type="text" id="eduField" placeholder="Computer Science"/></div>
+        <div class="form-group"><label>🇮🇩 Bidang Studi (Indonesia)</label>
+          <input type="text" id="eduFieldId" placeholder="Ilmu Komputer"/></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Start Year *</label>
@@ -499,8 +527,12 @@
         <div class="form-group"><label>GPA</label>
           <input type="number" id="eduGpa" placeholder="3.85" min="0" max="4" step="0.01"/></div>
       </div>
-      <div class="form-group"><label>Description</label>
-        <textarea id="eduDesc" rows="3" placeholder="Activities, achievements, thesis…"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Description (English)</label>
+          <textarea id="eduDesc" rows="2" placeholder="Activities, achievements, thesis…"></textarea></div>
+        <div class="form-group"><label>🇮🇩 Deskripsi (Indonesia)</label>
+          <textarea id="eduDescId" rows="2" placeholder="Kegiatan, prestasi, skripsi…"></textarea></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('eduModal')">Cancel</button>
@@ -518,8 +550,12 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="certId"/>
-      <div class="form-group"><label>Certificate Name *</label>
-        <input type="text" id="certName" placeholder="AWS Solutions Architect…"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Certificate Name * (English)</label>
+          <input type="text" id="certName" placeholder="AWS Solutions Architect…"/></div>
+        <div class="form-group"><label>🇮🇩 Nama Sertifikat (Indonesia)</label>
+          <input type="text" id="certNameId" placeholder="Arsitek Solusi AWS…"/></div>
+      </div>
       <div class="form-group"><label>Issuer *</label>
         <input type="text" id="certIssuer" placeholder="Amazon Web Services"/></div>
       <div class="form-row">
@@ -557,8 +593,12 @@
       <input type="hidden" id="skillId"/>
       <div class="form-group"><label>Skill Name *</label>
         <input type="text" id="skillName" placeholder="JavaScript"/></div>
-      <div class="form-group"><label>Category</label>
-        <input type="text" id="skillCategory" placeholder="Frontend, Backend, DevOps…"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Category (English)</label>
+          <input type="text" id="skillCategory" placeholder="Frontend, Backend, DevOps…"/></div>
+        <div class="form-group"><label>🇮🇩 Kategori (Indonesia)</label>
+          <input type="text" id="skillCategoryId" placeholder="Frontend, Backend, DevOps…"/></div>
+      </div>
       <div class="form-group">
         <label>Proficiency Level: <span id="skillLevelDisplay">80</span>%</label>
         <input type="range" id="skillLevel" min="0" max="100" value="80"

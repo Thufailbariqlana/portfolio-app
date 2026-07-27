@@ -41,10 +41,13 @@ async function loadProjects() {
 function openProjModal(proj = null) {
   currentProjId = proj ? proj.id : null;
   document.getElementById('projModalTitle').textContent = proj ? 'Edit Project' : 'Add Project';
-  document.getElementById('projId').value          = proj?.id || '';
-  document.getElementById('projTitle').value       = proj?.title || '';
-  document.getElementById('projShortDesc').value   = proj?.short_desc || '';
-  document.getElementById('projDesc').value        = proj?.description || '';
+  document.getElementById('projId').value            = proj?.id || '';
+  document.getElementById('projTitle').value         = proj?.title || '';
+  document.getElementById('projTitleId').value       = proj?.title_id || '';
+  document.getElementById('projShortDesc').value     = proj?.short_desc || '';
+  document.getElementById('projShortDescId').value   = proj?.short_desc_id || '';
+  document.getElementById('projDesc').value          = proj?.description || '';
+  document.getElementById('projDescId').value        = proj?.description_id || '';
   document.getElementById('projDemo').value        = proj?.demo_url || '';
   document.getElementById('projRepo').value        = proj?.repo_url || '';
   document.getElementById('projCategory').value    = proj?.category || '';
@@ -78,9 +81,12 @@ async function editProject(id) {
 async function saveProject() {
   const id = document.getElementById('projId').value;
   const fd = new FormData();
-  fd.append('title',           document.getElementById('projTitle').value.trim());
-  fd.append('short_desc',      document.getElementById('projShortDesc').value.trim());
-  fd.append('description',     document.getElementById('projDesc').value.trim());
+  fd.append('title',            document.getElementById('projTitle').value.trim());
+  fd.append('title_id',         document.getElementById('projTitleId').value.trim());
+  fd.append('short_desc',       document.getElementById('projShortDesc').value.trim());
+  fd.append('short_desc_id',    document.getElementById('projShortDescId').value.trim());
+  fd.append('description',      document.getElementById('projDesc').value.trim());
+  fd.append('description_id',   document.getElementById('projDescId').value.trim());
   fd.append('demo_url',        document.getElementById('projDemo').value.trim());
   fd.append('repo_url',        document.getElementById('projRepo').value.trim());
   fd.append('category',        document.getElementById('projCategory').value.trim());

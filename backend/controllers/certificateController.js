@@ -30,7 +30,7 @@ async function getOne(req, res) {
 // ── POST /api/certificates ────────────────────────────────────────────────────
 async function create(req, res) {
   try {
-    const { name, issuer, issue_date, expiry_date, credential_id, credential_url, sort_order } = req.body || {};
+    const { name, name_id, issuer, issue_date, expiry_date, credential_id, credential_url, sort_order } = req.body || {};
 
     if (!name || !issuer || !issue_date) {
       return res.status(400).json({ success: false, message: 'name, issuer, and issue_date are required.' });
@@ -39,15 +39,16 @@ async function create(req, res) {
     const image_url = req.file ? (req.file.path || req.file.secure_url || req.file.filename || '') : '';
 
     const result = await query(
-      `INSERT INTO certificates (name, issuer, issue_date, expiry_date, credential_id, credential_url, image_url, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO certificates (name, name_id, issuer, issue_date, expiry_date, credential_id, credential_url, image_url, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         name,
+        name_id       || '',
         issuer,
         issue_date,
-        expiry_date || null,
+        expiry_date   || null,
         credential_id || '',
-        credential_url || '',
+        credential_url|| '',
         image_url,
         sort_order ? parseInt(sort_order, 10) : 0,
       ]
@@ -75,7 +76,7 @@ async function update(req, res) {
       return res.status(404).json({ success: false, message: 'Certificate not found.' });
     }
 
-    const allowed = ['name', 'issuer', 'issue_date', 'expiry_date', 'credential_id', 'credential_url', 'sort_order'];
+    const allowed = ['name', 'name_id', 'issuer', 'issue_date', 'expiry_date', 'credential_id', 'credential_url', 'sort_order'];
     const data = {};
 
     allowed.forEach((f) => {

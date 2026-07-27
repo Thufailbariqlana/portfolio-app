@@ -48,8 +48,8 @@ async function getOne(req, res) {
 async function create(req, res) {
   try {
     const {
-      title, short_desc, description, demo_url, repo_url,
-      tech_stack, category, metric_users, metric_perf,
+      title, title_id, short_desc, short_desc_id, description, description_id,
+      demo_url, repo_url, tech_stack, category, metric_users, metric_perf,
       metric_custom, is_featured, sort_order
     } = req.body;
 
@@ -65,23 +65,26 @@ async function create(req, res) {
     const image_url = req.file ? (req.file.path || req.file.filename) : '';
 
     const result = await query(
-      `INSERT INTO projects (title, slug, short_desc, description, image_url, demo_url, repo_url, tech_stack, category, metric_users, metric_perf, metric_custom, is_featured, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO projects (title, title_id, slug, short_desc, short_desc_id, description, description_id, image_url, demo_url, repo_url, tech_stack, category, metric_users, metric_perf, metric_custom, is_featured, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title,
+        title_id      || '',
         slug,
-        short_desc || '',
-        description || '',
+        short_desc    || '',
+        short_desc_id || '',
+        description   || '',
+        description_id|| '',
         image_url,
-        demo_url || '',
-        repo_url || '',
-        tech_stack || '',
-        category || 'General',
-        metric_users || '',
-        metric_perf || '',
+        demo_url      || '',
+        repo_url      || '',
+        tech_stack    || '',
+        category      || 'General',
+        metric_users  || '',
+        metric_perf   || '',
         metric_custom || '',
         is_featured ? 1 : 0,
-        sort_order || 0
+        sort_order    || 0
       ]
     );
 
@@ -106,8 +109,8 @@ async function update(req, res) {
     }
 
     const allowed = [
-      'title','short_desc','description','demo_url','repo_url',
-      'tech_stack','category','metric_users','metric_perf',
+      'title','title_id','short_desc','short_desc_id','description','description_id',
+      'demo_url','repo_url','tech_stack','category','metric_users','metric_perf',
       'metric_custom','is_featured','sort_order'
     ];
     const data = {};

@@ -40,12 +40,13 @@ async function loadSkills() {
 function openSkillModal(skill = null) {
   currentSkillId = skill ? skill.id : null;
   document.getElementById('skillModalTitle').textContent = skill ? 'Edit Skill' : 'Add Skill';
-  document.getElementById('skillId').value       = skill?.id || '';
-  document.getElementById('skillName').value     = skill?.name || '';
-  document.getElementById('skillCategory').value = skill?.category || '';
-  document.getElementById('skillLevel').value    = skill?.level || 80;
-  document.getElementById('skillIcon').value     = skill?.icon_url || '';
-  document.getElementById('skillSort').value     = skill?.sort_order || 0;
+  document.getElementById('skillId').value           = skill?.id || '';
+  document.getElementById('skillName').value         = skill?.name || '';
+  document.getElementById('skillCategory').value     = skill?.category || '';
+  document.getElementById('skillCategoryId').value   = skill?.category_id || '';
+  document.getElementById('skillLevel').value        = skill?.level || 80;
+  document.getElementById('skillIcon').value         = skill?.icon_url || '';
+  document.getElementById('skillSort').value         = skill?.sort_order || 0;
   document.getElementById('skillLevelDisplay').textContent = skill?.level || 80;
   openModal('skillModal');
 }
@@ -61,11 +62,12 @@ async function editSkill(id) {
 async function saveSkill() {
   const id = document.getElementById('skillId').value;
   const payload = {
-    name:       document.getElementById('skillName').value.trim(),
-    category:   document.getElementById('skillCategory').value.trim(),
-    level:      Number(document.getElementById('skillLevel').value) || 80,
-    icon_url:   document.getElementById('skillIcon').value.trim(),
-    sort_order: Number(document.getElementById('skillSort').value) || 0
+    name:        document.getElementById('skillName').value.trim(),
+    category:    document.getElementById('skillCategory').value.trim(),
+    category_id: document.getElementById('skillCategoryId').value.trim(),
+    level:       Number(document.getElementById('skillLevel').value) || 80,
+    icon_url:    document.getElementById('skillIcon').value.trim(),
+    sort_order:  Number(document.getElementById('skillSort').value) || 0
   };
 
   if (!payload.name) {

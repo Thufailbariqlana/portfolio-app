@@ -43,7 +43,8 @@ async function updateProfile(req, res) {
     await ensureProfileExists();
 
     const allowed = [
-      'full_name', 'title', 'bio', 'email', 'phone', 'location',
+      'full_name', 'title', 'title_id', 'bio', 'bio_id',
+      'email', 'phone', 'location',
       'website', 'github_url', 'linkedin_url', 'twitter_url',
       'instagram_url', 'facebook_url', 'youtube_url',
       'years_of_exp', 'open_to_work'

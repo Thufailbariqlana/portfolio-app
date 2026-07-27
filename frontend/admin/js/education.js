@@ -40,12 +40,15 @@ function openEduModal(edu = null) {
   document.getElementById('eduId').value           = edu?.id || '';
   document.getElementById('eduInstitution').value  = edu?.institution || '';
   document.getElementById('eduDegree').value       = edu?.degree || '';
+  document.getElementById('eduDegreeId').value     = edu?.degree_id || '';
   document.getElementById('eduField').value        = edu?.field_of_study || '';
+  document.getElementById('eduFieldId').value      = edu?.field_of_study_id || '';
   document.getElementById('eduStartYear').value    = edu?.start_year || '';
   document.getElementById('eduEndYear').value      = edu?.end_year || '';
   document.getElementById('eduIsCurrent').checked  = !!edu?.is_current;
   document.getElementById('eduGpa').value          = edu?.gpa || '';
   document.getElementById('eduDesc').value         = edu?.description || '';
+  document.getElementById('eduDescId').value       = edu?.description_id || '';
   openModal('eduModal');
 }
 
@@ -60,15 +63,18 @@ async function editEducation(id) {
 async function saveEducation() {
   const id = document.getElementById('eduId').value;
   const payload = {
-    institution:   document.getElementById('eduInstitution').value.trim(),
-    degree:        document.getElementById('eduDegree').value.trim(),
-    field_of_study:document.getElementById('eduField').value.trim(),
-    start_year:    Number(document.getElementById('eduStartYear').value) || null,
-    end_year:      Number(document.getElementById('eduEndYear').value) || null,
-    is_current:    document.getElementById('eduIsCurrent').checked ? 1 : 0,
-    gpa:           Number(document.getElementById('eduGpa').value) || null,
-    description:   document.getElementById('eduDesc').value.trim(),
-    sort_order:    0
+    institution:       document.getElementById('eduInstitution').value.trim(),
+    degree:            document.getElementById('eduDegree').value.trim(),
+    degree_id:         document.getElementById('eduDegreeId').value.trim(),
+    field_of_study:    document.getElementById('eduField').value.trim(),
+    field_of_study_id: document.getElementById('eduFieldId').value.trim(),
+    start_year:        Number(document.getElementById('eduStartYear').value) || null,
+    end_year:          Number(document.getElementById('eduEndYear').value) || null,
+    is_current:        document.getElementById('eduIsCurrent').checked ? 1 : 0,
+    gpa:               Number(document.getElementById('eduGpa').value) || null,
+    description:       document.getElementById('eduDesc').value.trim(),
+    description_id:    document.getElementById('eduDescId').value.trim(),
+    sort_order:        0
   };
 
   if (!payload.institution || !payload.degree || !payload.start_year) {

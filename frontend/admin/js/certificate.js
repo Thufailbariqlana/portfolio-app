@@ -42,6 +42,7 @@ function openCertModal(cert = null) {
   document.getElementById('certModalTitle').textContent = cert ? 'Edit Certificate' : 'Add Certificate';
   document.getElementById('certId').value          = cert?.id || '';
   document.getElementById('certName').value        = cert?.name || '';
+  document.getElementById('certNameId').value      = cert?.name_id || '';
   document.getElementById('certIssuer').value      = cert?.issuer || '';
   document.getElementById('certIssueDate').value   = cert?.issue_date?.split('T')[0] || '';
   document.getElementById('certExpiryDate').value  = cert?.expiry_date?.split('T')[0] || '';
@@ -72,6 +73,7 @@ async function saveCertificate() {
   const id = document.getElementById('certId').value;
   const fd = new FormData();
   fd.append('name',           document.getElementById('certName').value.trim());
+  fd.append('name_id',        document.getElementById('certNameId').value.trim());
   fd.append('issuer',         document.getElementById('certIssuer').value.trim());
   fd.append('issue_date',     document.getElementById('certIssueDate').value);
   fd.append('expiry_date',    document.getElementById('certExpiryDate').value || '');

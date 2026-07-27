@@ -30,26 +30,27 @@ async function getOne(req, res) {
 // ── POST /api/experiences ─────────────────────────────────────────────────────
 async function create(req, res) {
   try {
-    const { company, position, location, start_date, end_date, is_current, description, tech_stack, sort_order } = req.body;
+    const { company, position, position_id, location, start_date, end_date, is_current, description, description_id, tech_stack, sort_order } = req.body;
 
     if (!company || !position || !start_date) {
       return res.status(400).json({ success: false, message: 'company, position, and start_date are required.' });
     }
 
-    // Di sini perubahannya: 'result' langsung berupa object ResultSetHeader dari MySQL
     const result = await query(
-      `INSERT INTO experiences (company, position, location, start_date, end_date, is_current, description, tech_stack, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO experiences (company, position, position_id, location, start_date, end_date, is_current, description, description_id, tech_stack, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         company,
         position,
-        location    || '',
+        position_id    || '',
+        location       || '',
         start_date,
-        end_date    || null,
-        is_current  ? 1 : 0,
-        description || '',
-        tech_stack  || '',
-        sort_order  || 0
+        end_date       || null,
+        is_current     ? 1 : 0,
+        description    || '',
+        description_id || '',
+        tech_stack     || '',
+        sort_order     || 0
       ]
     );
 
@@ -74,7 +75,7 @@ async function update(req, res) {
       return res.status(404).json({ success: false, message: 'Experience not found.' });
     }
 
-    const allowed = ['company','position','location','start_date','end_date','is_current','description','tech_stack','sort_order'];
+    const allowed = ['company','position','position_id','location','start_date','end_date','is_current','description','description_id','tech_stack','sort_order'];
     const data = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) data[f] = req.body[f]; });
 

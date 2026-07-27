@@ -116,6 +116,23 @@ function escHtml(str) {
 }
 
 /**
+ * Bilingual field picker.
+ * Returns the _id (Indonesian) version of a field when the UI language
+ * is 'id' AND the translated value is non-empty; otherwise returns the
+ * primary (English) value.
+ *
+ * Usage:  loc('title', profile)  →  p.title_id || p.title
+ *         loc('description', exp) → e.description_id || e.description
+ */
+function loc(field, obj) {
+  if (currentLang === 'id') {
+    const translated = obj[`${field}_id`];
+    if (translated && translated.trim()) return translated;
+  }
+  return obj[field] || '';
+}
+
+/**
  * Ensure a URL has a protocol so the browser doesn't treat it as a
  * relative path (which would cause a Vercel 404).
  * e.g. "github.com/user" → "https://github.com/user"
@@ -196,6 +213,13 @@ function applyTheme(theme) {
 })();
 
 // ── Language Toggle ───────────────────────────────────────────────
+// Store loaded data for re-render on lang switch
+let _cachedProfile     = null;
+let _cachedExperiences = null;
+let _cachedSkills      = null;
+let _cachedEducation   = null;
+let _cachedCerts       = null;
+
 (function initLang() {
   const btn = document.getElementById('langToggle');
   if (!btn) return;
@@ -203,12 +227,20 @@ function applyTheme(theme) {
     currentLang = currentLang === 'en' ? 'id' : 'en';
     localStorage.setItem('portfolio_lang', currentLang);
     applyI18n();
-    // Re-render dynamic content
-    if (allProjects.length) renderProjects(
-      currentFilter === 'All' || currentFilter === 'Semua' || currentFilter === t('projects.all')
-        ? allProjects
-        : allProjects.filter(p => p.category === currentFilter)
-    );
+    // Re-render ALL dynamic sections with new language
+    if (_cachedProfile)     rerenderProfile(_cachedProfile);
+    if (_cachedExperiences) rerenderExperiences(_cachedExperiences);
+    if (allProjects.length) {
+      rebuildProjectTabs();
+      renderProjects(
+        currentFilter === 'All' || currentFilter === 'Semua' || currentFilter === t('projects.all')
+          ? allProjects
+          : allProjects.filter(p => p.category === currentFilter)
+      );
+    }
+    if (_cachedSkills)    rerenderSkills(_cachedSkills);
+    if (_cachedEducation) rerenderEducation(_cachedEducation);
+    if (_cachedCerts)     rerenderCerts(_cachedCerts);
   });
 })();
 
@@ -296,18 +328,27 @@ function expIcon()   { return `<svg width="17" height="17" fill="none" stroke="c
 function linkIcon()  { return `<svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`; }
 
 // ── Profile ───────────────────────────────────────────────────────
+// Extracted so it can be called again on language toggle
+function rerenderProfile(p) {
+  if (!p) return;
+  setText('heroTitle', loc('title', p));
+  setText('heroBio',   loc('bio', p));
+  setText('aboutBio',  loc('bio', p));
+}
+
 async function loadProfile() {
   const p = await fetchJson('/profile');
   if (!p) return;
+  _cachedProfile = p;
 
   // Meta tags
   document.title = `${p.full_name || 'Portfolio'} · Portfolio`;
   const metaDesc = document.getElementById('metaDesc');
-  if (metaDesc) metaDesc.content = p.bio || '';
+  if (metaDesc) metaDesc.content = loc('bio', p);
   const ogTitle  = document.getElementById('ogTitle');
-  if (ogTitle)  ogTitle.content  = `${p.full_name} — ${p.title}`;
+  if (ogTitle)  ogTitle.content  = `${p.full_name} — ${loc('title', p)}`;
   const ogDesc   = document.getElementById('ogDesc');
-  if (ogDesc)   ogDesc.content   = p.bio || '';
+  if (ogDesc)   ogDesc.content   = loc('bio', p);
 
   // ── Hero ───────────────────────────────────────────────────────
   const firstName = (p.full_name || '').split(' ')[0];
@@ -315,8 +356,8 @@ async function loadProfile() {
   if (heroNameEl) {
     heroNameEl.innerHTML = `Hi, I'm <span class="accent">${escHtml(p.full_name || 'Your Name')}</span>`;
   }
-  setText('heroTitle', p.title || '');
-  setText('heroBio',   p.bio   || '');
+  setText('heroTitle', loc('title', p));
+  setText('heroBio',   loc('bio', p));
 
   // Badge
   const badgeWrap = document.getElementById('heroBadge')?.parentElement;
@@ -364,7 +405,7 @@ async function loadProfile() {
   }
 
   // ── About section ─────────────────────────────────────────────
-  setText('aboutBio', p.bio || '');
+  setText('aboutBio', loc('bio', p));
 
   const infoList = document.getElementById('aboutInfoList');
   if (infoList) {
@@ -427,9 +468,7 @@ async function loadProfile() {
 }
 
 // ── Experiences ───────────────────────────────────────────────────
-async function loadExperiences() {
-  const exps = await fetchJson('/experiences');
-  hide('experienceLoading');
+function rerenderExperiences(exps) {
   const container = document.getElementById('experienceTimeline');
   if (!container) return;
   if (!exps || exps.length === 0) {
@@ -441,18 +480,19 @@ async function loadExperiences() {
       ? `${fmtDate(e.start_date)} — <span class="tag-green" style="padding:.1rem .4rem;border-radius:4px">${t('exp.present')}</span>`
       : `${fmtDate(e.start_date)} — ${fmtDate(e.end_date)}`;
     const tags = (e.tech_stack || '').split(',').map(t2 => t2.trim()).filter(Boolean);
+    const desc = loc('description', e);
     return `
       <div class="timeline-item fade-in">
         <div class="timeline-card">
           <div class="timeline-top">
             <div>
               <div class="timeline-company">${escHtml(e.company)}</div>
-              <div class="timeline-position">${escHtml(e.position)}</div>
+              <div class="timeline-position">${escHtml(loc('position', e))}</div>
               ${e.location ? `<div class="timeline-location">${locIcon()} ${escHtml(e.location)}</div>` : ''}
             </div>
             <div class="timeline-period">${period}</div>
           </div>
-          ${e.description ? `<div class="timeline-desc">${escHtml(e.description)}</div>` : ''}
+          ${desc ? `<div class="timeline-desc">${escHtml(desc)}</div>` : ''}
           ${tags.length ? `<div class="timeline-tags">${tags.map(tg => `<span class="tag">${escHtml(tg)}</span>`).join('')}</div>` : ''}
         </div>
       </div>`;
@@ -464,6 +504,13 @@ async function loadExperiences() {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
   }, { threshold: 0.1 });
   container.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+}
+
+async function loadExperiences() {
+  const exps = await fetchJson('/experiences');
+  _cachedExperiences = exps;
+  hide('experienceLoading');
+  rerenderExperiences(exps);
 }
 
 // ── Projects ──────────────────────────────────────────────────────
@@ -529,10 +576,11 @@ function renderProjects(projects) {
   grid.style.display = '';
 
   grid.innerHTML = projects.map((p, idx) => {
-    // Cloudinary URL is absolute — use directly
+    const projTitle    = loc('title', p);
+    const projShort    = loc('short_desc', p) || loc('description', p).substring(0, 120);
     const imgEl = p.image_url
       ? `<div class="project-img-wrap">
-           <img src="${escHtml(p.image_url)}" alt="${escHtml(p.title)}" class="project-img" loading="lazy"
+           <img src="${escHtml(p.image_url)}" alt="${escHtml(projTitle)}" class="project-img" loading="lazy"
                 onerror="this.parentNode.innerHTML='<div class=&quot;project-img-placeholder&quot;>No Image</div>'"/>
            <div class="project-img-overlay"></div>
          </div>`
@@ -546,8 +594,8 @@ function renderProjects(projects) {
         ${imgEl}
         <div class="project-body">
           <div class="project-category">${escHtml(p.category || 'Project')}</div>
-          <h3 class="project-title">${escHtml(p.title)}</h3>
-          <p class="project-desc">${escHtml(p.short_desc || (p.description || '').substring(0, 120))}</p>
+          <h3 class="project-title">${escHtml(projTitle)}</h3>
+          <p class="project-desc">${escHtml(projShort)}</p>
           ${metrics.length ? `<div class="project-metrics">${metrics.map(m => `<span class="project-metric">${escHtml(m)}</span>`).join('')}</div>` : ''}
           ${tagList.length ? `<div class="timeline-tags">${tagList.slice(0, 5).map(tg => `<span class="tag">${escHtml(tg)}</span>`).join('')}</div>` : ''}
           <div class="project-footer">
@@ -563,13 +611,10 @@ function renderProjects(projects) {
 }
 
 // ── Skills ────────────────────────────────────────────────────────
-async function loadSkills() {
-  const skills = await fetchJson('/skills') || [];
-  hide('skillsLoading');
+function rerenderSkills(skills) {
   const container = document.getElementById('skillsContainer');
   if (!container) return;
-
-  if (skills.length === 0) {
+  if (!skills || skills.length === 0) {
     container.innerHTML = `<p class="empty-msg">${t('no.data')}</p>`;
     show('skillsContainer'); return;
   }
@@ -577,9 +622,13 @@ async function loadSkills() {
   const groups = {};
   skills.forEach(s => { const cat = s.category || 'General'; if (!groups[cat]) groups[cat] = []; groups[cat].push(s); });
 
-  container.innerHTML = Object.entries(groups).map(([cat, group]) => `
+  container.innerHTML = Object.entries(groups).map(([cat, group]) => {
+    const catLabel = (currentLang === 'id' && group[0].category_id && group[0].category_id.trim())
+      ? group[0].category_id
+      : cat;
+    return `
     <div class="skills-section-group">
-      <div class="skills-group-title">${escHtml(cat)}</div>
+      <div class="skills-group-title">${escHtml(catLabel)}</div>
       <div class="skills-grid">
         ${group.map(s => `
           <div class="skill-card">
@@ -590,7 +639,8 @@ async function loadSkills() {
             <div class="skill-level">${s.level}%</div>
           </div>`).join('')}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   show('skillsContainer');
 
@@ -607,14 +657,18 @@ async function loadSkills() {
   bars.forEach(bar => barObs.observe(bar));
 }
 
+async function loadSkills() {
+  const skills = await fetchJson('/skills') || [];
+  _cachedSkills = skills;
+  hide('skillsLoading');
+  rerenderSkills(skills);
+}
+
 // ── Education ─────────────────────────────────────────────────────
-async function loadEducation() {
-  const edu = await fetchJson('/education') || [];
-  hide('educationLoading');
+function rerenderEducation(edu) {
   const grid = document.getElementById('educationGrid');
   if (!grid) return;
-
-  if (edu.length === 0) {
+  if (!edu || edu.length === 0) {
     grid.innerHTML = `<p class="empty-msg" style="grid-column:1/-1">${t('no.data')}</p>`;
     show('educationGrid'); return;
   }
@@ -623,6 +677,9 @@ async function loadEducation() {
     const years = e.is_current
       ? `${e.start_year} — ${t('exp.present')}`
       : `${e.start_year} — ${e.end_year || '?'}`;
+    const eduDeg   = loc('degree', e);
+    const eduField = loc('field_of_study', e);
+    const eduDesc  = loc('description', e);
     return `
       <div class="edu-card">
         <div class="edu-icon">
@@ -631,34 +688,36 @@ async function loadEducation() {
           </svg>
         </div>
         <div class="edu-institution">${escHtml(e.institution)}</div>
-        <div class="edu-degree">${escHtml(e.degree)}</div>
-        ${e.field_of_study ? `<div class="edu-field">${escHtml(e.field_of_study)}</div>` : ''}
+        <div class="edu-degree">${escHtml(eduDeg)}</div>
+        ${eduField ? `<div class="edu-field">${escHtml(eduField)}</div>` : ''}
         <div class="edu-year">${years}</div>
         ${e.gpa ? `<span class="edu-gpa">GPA ${parseFloat(e.gpa).toFixed(2)}</span>` : ''}
-        ${e.description ? `<p style="font-size:.8rem;color:var(--muted);margin-top:.75rem;line-height:1.6">${escHtml(e.description)}</p>` : ''}
+        ${eduDesc ? `<p style="font-size:.8rem;color:var(--muted);margin-top:.75rem;line-height:1.6">${escHtml(eduDesc)}</p>` : ''}
       </div>`;
   }).join('');
   show('educationGrid');
 }
 
+async function loadEducation() {
+  const edu = await fetchJson('/education') || [];
+  _cachedEducation = edu;
+  hide('educationLoading');
+  rerenderEducation(edu);
+}
+
 // ── Certificates ──────────────────────────────────────────────────
-async function loadCertificates() {
-  const certs = await fetchJson('/certificates') || [];
-  hide('certsLoading');
+function rerenderCerts(certs) {
   const grid = document.getElementById('certsGrid');
   if (!grid) return;
-
-  setText('heroCertCount', certs.length + '+');
-
-  if (certs.length === 0) {
+  if (!certs || certs.length === 0) {
     grid.innerHTML = `<p class="empty-msg" style="grid-column:1/-1">${t('no.data')}</p>`;
     show('certsGrid'); return;
   }
 
   grid.innerHTML = certs.map(c => {
-    // Cloudinary URL is absolute — use directly
+    const certName = loc('name', c);
     const imgEl = c.image_url
-      ? `<div class="cert-img-wrap"><img src="${escHtml(c.image_url)}" alt="${escHtml(c.name)}" class="cert-img" loading="lazy" onerror="this.parentNode.innerHTML='<div class=&quot;cert-img-placeholder&quot;></div>'"/></div>`
+      ? `<div class="cert-img-wrap"><img src="${escHtml(c.image_url)}" alt="${escHtml(certName)}" class="cert-img" loading="lazy" onerror="this.parentNode.innerHTML='<div class=&quot;cert-img-placeholder&quot;></div>'"/></div>`
       : `<div class="cert-img-placeholder">
            <svg width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color:var(--muted)">
              <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
@@ -668,7 +727,7 @@ async function loadCertificates() {
       <div class="cert-card">
         ${imgEl}
         <div class="cert-body">
-          <div class="cert-name">${escHtml(c.name)}</div>
+          <div class="cert-name">${escHtml(certName)}</div>
           <div class="cert-issuer">${escHtml(c.issuer)}</div>
           <div class="cert-date">
             ${fmtDate(c.issue_date)}${c.expiry_date ? ` · ${fmtDate(c.expiry_date)}` : ''}
@@ -688,6 +747,14 @@ async function loadCertificates() {
       </div>`;
   }).join('');
   show('certsGrid');
+}
+
+async function loadCertificates() {
+  const certs = await fetchJson('/certificates') || [];
+  _cachedCerts = certs;
+  hide('certsLoading');
+  setText('heroCertCount', certs.length + '+');
+  rerenderCerts(certs);
 }
 
 // ── Contact Form ──────────────────────────────────────────────────

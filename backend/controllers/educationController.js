@@ -30,25 +30,28 @@ async function getOne(req, res) {
 // ── POST /api/education ───────────────────────────────────────────────────────
 async function create(req, res) {
   try {
-    const { institution, degree, field_of_study, start_year, end_year, is_current, gpa, description, sort_order } = req.body;
+    const { institution, degree, degree_id, field_of_study, field_of_study_id, start_year, end_year, is_current, gpa, description, description_id, sort_order } = req.body;
 
     if (!institution || !degree || !start_year) {
       return res.status(400).json({ success: false, message: 'institution, degree, and start_year are required.' });
     }
 
     const resDb = await query(
-      `INSERT INTO education (institution, degree, field_of_study, start_year, end_year, is_current, gpa, description, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO education (institution, degree, degree_id, field_of_study, field_of_study_id, start_year, end_year, is_current, gpa, description, description_id, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         institution,
         degree,
-        field_of_study || '',
+        degree_id          || '',
+        field_of_study     || '',
+        field_of_study_id  || '',
         start_year,
-        end_year       || null,
-        is_current     ? 1 : 0,
-        gpa            || null,
-        description    || '',
-        sort_order     || 0
+        end_year           || null,
+        is_current         ? 1 : 0,
+        gpa                || null,
+        description        || '',
+        description_id     || '',
+        sort_order         || 0
       ]
     );
 
@@ -77,7 +80,7 @@ async function update(req, res) {
       return res.status(404).json({ success: false, message: 'Education record not found.' });
     }
 
-    const allowed = ['institution','degree','field_of_study','start_year','end_year','is_current','gpa','description','sort_order'];
+    const allowed = ['institution','degree','degree_id','field_of_study','field_of_study_id','start_year','end_year','is_current','gpa','description','description_id','sort_order'];
     const data = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) data[f] = req.body[f]; });
 

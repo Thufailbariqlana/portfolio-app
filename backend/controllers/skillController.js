@@ -48,7 +48,7 @@ async function getCategories(req, res) {
 // ── POST /api/skills ──────────────────────────────────────────────────────────
 async function create(req, res) {
   try {
-    const { name, category, level, icon_url, sort_order } = req.body;
+    const { name, category, category_id, level, icon_url, sort_order } = req.body;
 
     if (!name) return res.status(400).json({ success: false, message: 'name is required.' });
 
@@ -57,10 +57,9 @@ async function create(req, res) {
       return res.status(400).json({ success: false, message: 'level must be a number between 0 and 100.' });
     }
 
-    // Mengubah `const [result]` menjadi `const result`
     const result = await query(
-      'INSERT INTO skills (name, category, level, icon_url, sort_order) VALUES (?, ?, ?, ?, ?)',
-      [name, category || 'General', levelVal, icon_url || '', sort_order || 0]
+      'INSERT INTO skills (name, category, category_id, level, icon_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, category || 'General', category_id || '', levelVal, icon_url || '', sort_order || 0]
     );
 
     const created = await query('SELECT * FROM skills WHERE id = ? LIMIT 1', [result.insertId]);
@@ -79,7 +78,7 @@ async function update(req, res) {
       return res.status(404).json({ success: false, message: 'Skill not found.' });
     }
 
-    const allowed = ['name','category','level','icon_url','sort_order'];
+    const allowed = ['name','category','category_id','level','icon_url','sort_order'];
     const data = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) data[f] = req.body[f]; });
 

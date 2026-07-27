@@ -18,7 +18,9 @@ async function loadProfile() {
   const p = r.data.data;
   document.getElementById('pFullName').value    = p.full_name    || '';
   document.getElementById('pTitle').value       = p.title        || '';
+  document.getElementById('pTitleId').value     = p.title_id     || '';
   document.getElementById('pBio').value         = p.bio          || '';
+  document.getElementById('pBioId').value       = p.bio_id       || '';
   document.getElementById('pEmail').value       = p.email        || '';
   document.getElementById('pPhone').value       = p.phone        || '';
   document.getElementById('pLocation').value    = p.location     || '';
@@ -54,7 +56,9 @@ async function saveProfile() {
   const payload = {
     full_name:     document.getElementById('pFullName').value.trim(),
     title:         document.getElementById('pTitle').value.trim(),
+    title_id:      document.getElementById('pTitleId').value.trim(),
     bio:           document.getElementById('pBio').value.trim(),
+    bio_id:        document.getElementById('pBioId').value.trim(),
     email:         document.getElementById('pEmail').value.trim(),
     phone:         document.getElementById('pPhone').value.trim(),
     location:      document.getElementById('pLocation').value.trim(),
