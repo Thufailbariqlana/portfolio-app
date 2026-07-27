@@ -32,7 +32,7 @@ async function submit(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid email address.' });
     }
 
-    const [result] = await query(
+    const result = await query(
       'INSERT INTO contacts (sender_name, sender_email, subject, message) VALUES (?, ?, ?, ?)',
       [sender_name.trim(), sender_email.trim(), (subject || '').trim(), message.trim()]
     );
