@@ -24,7 +24,7 @@ const contactRoutes     = require('./routes/contactRoutes');
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
-// ── Trust proxy ───────────────────────────────────────────────────────────────
+// ── Trust proxy (Penting untuk Vercel / Reverse Proxy Rate Limiter) ──────────
 app.set('trust proxy', 1);
 
 // ── Security Headers (Helmet) ─────────────────────────────────────────────────
@@ -32,27 +32,26 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-// ── Simple & Safe CORS for Vercel Serverless ─────────────────────────────────
+// ── Safe & Production-Ready CORS ──────────────────────────────────────────────
 const corsOptions = {
-  origin: true, // Dinamis mengizinkan origin mana pun yang memanggil
+  origin: true, // Auto reflect origin pemanggil
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-CSRF-Token']
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Handle semua preflight request
 
-// ── General Middleware ────────────────────────────────────────────────────────
+// ── General Body Parsing & Compression ────────────────────────────────────────
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ── Static Files ──────────────────────────────────────────────────────────────
+// ── Static Files (Fallback) ───────────────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ── Global Rate Limiter ───────────────────────────────────────────────────────
+// ── Rate Limiters ─────────────────────────────────────────────────────────────
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
@@ -71,7 +70,7 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth', authLimiter);
 
-// ── Health Check ──────────────────────────────────────────────────────────────
+// ── Health Checks ─────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({
     success: true,
@@ -81,12 +80,11 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// Root endpoint test
 app.get('/', (_req, res) => {
   res.json({ success: true, message: 'Portfolio API Backend is Running on Vercel Serverless!' });
 });
 
-// ── API Routes ────────────────────────────────────────────────────────────────
+// ── API Routes Mount ──────────────────────────────────────────────────────────
 app.use('/api/auth',         authRoutes);
 app.use('/api/profile',      profileRoutes);
 app.use('/api/experiences',  experienceRoutes);
@@ -111,14 +109,17 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-// ── Mode Handling (Serverless Vercel vs Local) ────────────────────────────────
+// ── Local Development Runner ──────────────────────────────────────────────────
 if (!process.env.VERCEL) {
-  // Hanya jalankan app.listen & testConnection secara async jika di LOCAL
   (async () => {
-    await testConnection();
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`\n🚀  Portfolio API → http://0.0.0.0:${PORT}`);
-    });
+    try {
+      await testConnection();
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`\n🚀 Portfolio API running local → http://localhost:${PORT}`);
+      });
+    } catch (dbErr) {
+      console.error('Failed to connect DB locally:', dbErr);
+    }
   })();
 }
 

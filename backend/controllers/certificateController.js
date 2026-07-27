@@ -1,7 +1,5 @@
 'use strict';
 
-const path = require('path');
-const fs   = require('fs');
 const { query, buildSetClause } = require('../config/db');
 
 // ── GET /api/certificates ─────────────────────────────────────────────────────
@@ -38,7 +36,8 @@ async function create(req, res) {
       return res.status(400).json({ success: false, message: 'name, issuer, and issue_date are required.' });
     }
 
-    const image_url = req.file ? `/uploads/certificates/${req.file.filename}` : '';
+    // Mengambil URL Cloudinary dari middleware upload (req.file.path / filename)
+    const image_url = req.file ? (req.file.path || req.file.secure_url || req.file.filename) : '';
 
     const result = await query(
       `INSERT INTO certificates (name, issuer, issue_date, expiry_date, credential_id, credential_url, image_url, sort_order)
@@ -51,15 +50,17 @@ async function create(req, res) {
         credential_id  || '',
         credential_url || '',
         image_url,
-        sort_order     || 0
+        sort_order ? parseInt(sort_order, 10) : 0
       ]
     );
 
-    const created = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [result.insertId]);
+    const insertId = result.insertId || (Array.isArray(result) && result[0]?.insertId);
+    const created = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [insertId]);
+    
     return res.status(201).json({ 
       success: true, 
-      message: 'Certificate created.', 
-      data: Array.isArray(created) ? created[0] : null 
+      message: 'Certificate created successfully.', 
+      data: Array.isArray(created) ? created[0] : (created || null)
     });
   } catch (err) {
     console.error('[certificateController.create]', err);
@@ -75,19 +76,22 @@ async function update(req, res) {
       return res.status(404).json({ success: false, message: 'Certificate not found.' });
     }
 
-    const allowed = ['name','issuer','issue_date','expiry_date','credential_id','credential_url','sort_order'];
+    const allowed = ['name', 'issuer', 'issue_date', 'expiry_date', 'credential_id', 'credential_url', 'sort_order'];
     const data = {};
-    allowed.forEach(f => { if (req.body[f] !== undefined) data[f] = req.body[f]; });
+    
+    allowed.forEach(f => { 
+      if (req.body[f] !== undefined) {
+        data[f] = req.body[f]; 
+      }
+    });
 
     if (req.file) {
-      if (existing[0].image_url) {
-        const oldPath = path.join(__dirname, '..', existing[0].image_url);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      }
-      data.image_url = `/uploads/certificates/${req.file.filename}`;
+      data.image_url = req.file.path || req.file.secure_url || req.file.filename;
     }
 
-    if (Object.keys(data).length === 0) return res.status(400).json({ success: false, message: 'No valid fields provided.' });
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid fields provided for update.' });
+    }
 
     const { clause, values } = buildSetClause(data);
     await query(`UPDATE certificates SET ${clause} WHERE id = ?`, [...values, req.params.id]);
@@ -95,8 +99,8 @@ async function update(req, res) {
     const updated = await query('SELECT * FROM certificates WHERE id = ? LIMIT 1', [req.params.id]);
     return res.status(200).json({ 
       success: true, 
-      message: 'Certificate updated.', 
-      data: Array.isArray(updated) ? updated[0] : null 
+      message: 'Certificate updated successfully.', 
+      data: Array.isArray(updated) ? updated[0] : (updated || null)
     });
   } catch (err) {
     console.error('[certificateController.update]', err);
@@ -112,13 +116,8 @@ async function remove(req, res) {
       return res.status(404).json({ success: false, message: 'Certificate not found.' });
     }
 
-    if (existing[0].image_url) {
-      const imgPath = path.join(__dirname, '..', existing[0].image_url);
-      if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
-    }
-
     await query('DELETE FROM certificates WHERE id = ?', [req.params.id]);
-    return res.status(200).json({ success: true, message: 'Certificate deleted.' });
+    return res.status(200).json({ success: true, message: 'Certificate deleted successfully.' });
   } catch (err) {
     console.error('[certificateController.remove]', err);
     return res.status(500).json({ success: false, message: 'Server error.' });
