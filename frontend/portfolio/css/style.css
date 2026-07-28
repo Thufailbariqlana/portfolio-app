@@ -417,9 +417,19 @@ section { padding: 5.5rem 1.5rem; }
 }
 .proj-search-clear:hover { color: var(--text-h); }
 
-/* ── Project Tabs ───────────────────────────────────────────── */
+/* ── Project Tabs row (tabs + arrow scroll buttons) ─────────── */
+.proj-tabs-row {
+  display: flex; align-items: center; gap: .35rem;
+}
+.proj-tab-arrow {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 7px;
+  border: 1px solid var(--border-2); background: var(--surface);
+  color: var(--muted); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all var(--trans);
+}
+.proj-tab-arrow:hover { border-color: var(--accent); color: var(--accent); background: rgba(var(--accent-rgb),.08); }
 .proj-tabs-wrap {
-  overflow-x: auto;
+  overflow-x: auto; flex: 1;
   -ms-overflow-style: none; scrollbar-width: none;
 }
 .proj-tabs-wrap::-webkit-scrollbar { display: none; }

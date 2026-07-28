@@ -16,7 +16,8 @@ async function loadProjects() {
 
   tbody.innerHTML = projs.map(p => {
     // Cloudinary sudah menyimpan URL penuh — tidak perlu prefix backend
-    const imgSrc = p.image_url || 'https://via.placeholder.com/44x34?text=No+Img';
+    const noImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='34' viewBox='0 0 44 34'><rect width='44' height='34' rx='4' fill='%23e2e8f0'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='7' fill='%2394a3b8'>No Img</text></svg>`;
+    const imgSrc = p.image_url || noImg;
     return `
       <tr>
         <td><img src="${imgSrc}" class="thumb" alt="Project thumbnail"/></td>
@@ -58,15 +59,23 @@ function openProjModal(proj = null) {
   document.getElementById('projFeatured').checked  = !!proj?.is_featured;
   document.getElementById('projSort').value        = proj?.sort_order || 0;
 
-  const preview = document.getElementById('projImagePreview');
+  const preview   = document.getElementById('projImagePreview');
+  const imgActions= document.getElementById('projImageActions');
+  const removeBtn = document.getElementById('projImageRemoveBtn');
   if (proj?.image_url) {
-    // Cloudinary URL sudah absolute — gunakan langsung
     preview.src = proj.image_url;
     preview.style.display = 'block';
+    if (imgActions) imgActions.style.display = 'flex';
+    if (removeBtn) removeBtn.style.display = '';
   } else {
     preview.style.display = 'none';
+    if (imgActions) imgActions.style.display = 'none';
   }
-  document.getElementById('projImage').value = '';
+  // Reset file inputs
+  const projImg = document.getElementById('projImage');
+  if (projImg) projImg.value = '';
+  const projImgNew = document.getElementById('projImageNew');
+  if (projImgNew) { projImgNew.value = ''; projImgNew.style.display = proj?.image_url ? 'none' : 'block'; }
   openModal('projModal');
 }
 
@@ -97,7 +106,9 @@ async function saveProject() {
   fd.append('is_featured',     document.getElementById('projFeatured').checked ? '1' : '0');
   fd.append('sort_order',      document.getElementById('projSort').value);
 
-  const imgFile = document.getElementById('projImage').files[0];
+  // Support both the "replace" input and the "new upload" input
+  const imgFile = (document.getElementById('projImage')?.files[0])
+                || (document.getElementById('projImageNew')?.files[0]);
   if (imgFile) fd.append('image', imgFile);
 
   if (!fd.get('title')) {
@@ -118,6 +129,24 @@ async function saveProject() {
     loadProjects();
   } else {
     alert(r.data.message || 'Failed to save project.');
+  }
+}
+
+// ── Remove Image ──────────────────────────────────────────────────────────────
+async function removeProjectImage() {
+  const id = document.getElementById('projId').value;
+  if (!id) return;
+  if (!confirm('Remove the current image? This cannot be undone.')) return;
+
+  const r = await apiFetch(`/projects/${id}/image`, { method: 'DELETE' });
+  if (!r) return;
+  if (r.ok) {
+    document.getElementById('projImagePreview').style.display = 'none';
+    const imgActions = document.getElementById('projImageActions');
+    if (imgActions) imgActions.style.display = 'none';
+    showInlineAlert('projAlert', 'Image removed.', 'success');
+  } else {
+    alert(r.data.message || 'Failed to remove image.');
   }
 }
 

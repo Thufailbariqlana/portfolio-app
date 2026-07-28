@@ -16,7 +16,8 @@ async function loadCertificates() {
 
   tbody.innerHTML = certs.map(c => {
     // Cloudinary sudah menyimpan URL penuh — tidak perlu prefix backend
-    const imgSrc = c.image_url || 'https://via.placeholder.com/44x34?text=Cert';
+    const noImg = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='44' height='34' viewBox='0 0 44 34'><rect width='44' height='34' rx='4' fill='%23e2e8f0'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='7' fill='%2394a3b8'>Cert</text></svg>`;
+    const imgSrc = c.image_url || noImg;
     return `
       <tr>
         <td><img src="${imgSrc}" class="thumb" alt="Certificate image"/></td>
@@ -49,15 +50,20 @@ function openCertModal(cert = null) {
   document.getElementById('certCredId').value      = cert?.credential_id || '';
   document.getElementById('certCredUrl').value     = cert?.credential_url || '';
 
-  const preview = document.getElementById('certImagePreview');
+  const preview   = document.getElementById('certImagePreview');
+  const imgActions= document.getElementById('certImageActions');
   if (cert?.image_url) {
-    // Cloudinary URL sudah absolute — gunakan langsung
     preview.src = cert.image_url;
     preview.style.display = 'block';
+    if (imgActions) imgActions.style.display = 'flex';
   } else {
     preview.style.display = 'none';
+    if (imgActions) imgActions.style.display = 'none';
   }
-  document.getElementById('certImage').value = '';
+  const certImg = document.getElementById('certImage');
+  if (certImg) certImg.value = '';
+  const certImgNew = document.getElementById('certImageNew');
+  if (certImgNew) { certImgNew.value = ''; certImgNew.style.display = cert?.image_url ? 'none' : 'block'; }
   openModal('certModal');
 }
 
@@ -81,7 +87,8 @@ async function saveCertificate() {
   fd.append('credential_url', document.getElementById('certCredUrl').value.trim());
   fd.append('sort_order',     '0');
 
-  const imgFile = document.getElementById('certImage').files[0];
+  const imgFile = (document.getElementById('certImage')?.files[0])
+                || (document.getElementById('certImageNew')?.files[0]);
   if (imgFile) fd.append('image', imgFile);
 
   if (!fd.get('name') || !fd.get('issuer') || !fd.get('issue_date')) {
@@ -102,6 +109,24 @@ async function saveCertificate() {
     loadCertificates();
   } else {
     alert(r.data.message || 'Failed to save certificate.');
+  }
+}
+
+// ── Remove Image ──────────────────────────────────────────────────────────────
+async function removeCertImage() {
+  const id = document.getElementById('certId').value;
+  if (!id) return;
+  if (!confirm('Remove the current image? This cannot be undone.')) return;
+
+  const r = await apiFetch(`/certificates/${id}/image`, { method: 'DELETE' });
+  if (!r) return;
+  if (r.ok) {
+    document.getElementById('certImagePreview').style.display = 'none';
+    const imgActions = document.getElementById('certImageActions');
+    if (imgActions) imgActions.style.display = 'none';
+    showInlineAlert('certAlert', 'Image removed.', 'success');
+  } else {
+    alert(r.data.message || 'Failed to remove image.');
   }
 }
 

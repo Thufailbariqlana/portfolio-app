@@ -447,8 +447,25 @@
           <textarea id="projDescId" rows="3" placeholder="Deskripsi proyek secara lengkap…"></textarea></div>
       </div>
       <div class="form-group"><label>Project Image</label>
-        <input type="file" id="projImage" accept="image/*"/>
-        <img id="projImagePreview" src="" alt="" style="max-height:80px;margin-top:.5rem;display:none;border-radius:4px;"/>
+        <!-- Current image preview + Replace / Remove actions -->
+        <div id="projImageActions" style="display:none;align-items:center;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap">
+          <img id="projImagePreview" src="" alt="Current image"
+               style="height:60px;border-radius:6px;border:1px solid var(--border);object-fit:cover;"/>
+          <div style="display:flex;flex-direction:column;gap:.3rem">
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;font-size:11px">
+              🔄 Replace Image
+              <input type="file" id="projImage" accept="image/*" style="display:none"
+                     onchange="document.getElementById('projImagePreview').src=URL.createObjectURL(this.files[0]);"/>
+            </label>
+            <button id="projImageRemoveBtn" class="btn btn-sm" style="font-size:11px;background:#fef2f2;color:#dc2626;border-color:#fecaca;"
+                    type="button" onclick="removeProjectImage()">🗑 Remove Image</button>
+          </div>
+        </div>
+        <!-- Upload when no image -->
+        <input type="file" id="projImageNew" accept="image/*"
+               style="display:block"
+               onchange="this.style.display='none';document.getElementById('projImageActions').style.display='flex';document.getElementById('projImagePreview').src=URL.createObjectURL(this.files[0]);document.getElementById('projImagePreview').style.display='block';"/>
+        <small class="text-muted" style="font-size:11px">Upload new image or replace existing. Stored on Cloudinary.</small>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Demo URL</label>
@@ -571,8 +588,23 @@
           <input type="url" id="certCredUrl" placeholder="https://…"/></div>
       </div>
       <div class="form-group"><label>Certificate Image</label>
-        <input type="file" id="certImage" accept="image/*"/>
-        <img id="certImagePreview" src="" alt="" style="max-height:80px;margin-top:.5rem;display:none;border-radius:4px;"/>
+        <div id="certImageActions" style="display:none;align-items:center;gap:.5rem;margin-bottom:.5rem;flex-wrap:wrap">
+          <img id="certImagePreview" src="" alt="Current image"
+               style="height:60px;border-radius:6px;border:1px solid var(--border);object-fit:cover;"/>
+          <div style="display:flex;flex-direction:column;gap:.3rem">
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer;font-size:11px">
+              🔄 Replace Image
+              <input type="file" id="certImage" accept="image/*" style="display:none"
+                     onchange="document.getElementById('certImagePreview').src=URL.createObjectURL(this.files[0]);"/>
+            </label>
+            <button class="btn btn-sm" style="font-size:11px;background:#fef2f2;color:#dc2626;border-color:#fecaca;"
+                    type="button" onclick="removeCertImage()">🗑 Remove Image</button>
+          </div>
+        </div>
+        <input type="file" id="certImageNew" accept="image/*"
+               style="display:block"
+               onchange="this.style.display='none';document.getElementById('certImageActions').style.display='flex';document.getElementById('certImagePreview').src=URL.createObjectURL(this.files[0]);document.getElementById('certImagePreview').style.display='block';"/>
+        <small class="text-muted" style="font-size:11px">Upload or replace image. Stored on Cloudinary.</small>
       </div>
     </div>
     <div class="modal-footer">

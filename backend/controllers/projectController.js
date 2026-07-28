@@ -194,6 +194,21 @@ async function update(req, res) {
   }
 }
 
+// ── DELETE /api/projects/:id/image — clear image_url only ────────────────────
+async function removeImage(req, res) {
+  try {
+    const existing = await query('SELECT id FROM projects WHERE id = ? LIMIT 1', [req.params.id]);
+    if (!existing || !Array.isArray(existing) || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Project not found.' });
+    }
+    await query('UPDATE projects SET image_url = ? WHERE id = ?', ['', req.params.id]);
+    return res.status(200).json({ success: true, message: 'Project image removed.' });
+  } catch (err) {
+    console.error('[projectController.removeImage]', err);
+    return res.status(500).json({ success: false, message: 'Server error.' });
+  }
+}
+
 // ── DELETE /api/projects/:id ──────────────────────────────────────────────────
 async function remove(req, res) {
   try {
@@ -209,4 +224,4 @@ async function remove(req, res) {
   }
 }
 
-module.exports = { getAll, getOne, create, update, remove };
+module.exports = { getAll, getOne, create, update, remove, removeImage };

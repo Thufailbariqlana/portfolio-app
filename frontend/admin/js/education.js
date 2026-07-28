@@ -22,7 +22,7 @@ async function loadEducation() {
         <td>${escHtml(e.degree)}</td>
         <td>${escHtml(e.field_of_study || '—')}</td>
         <td>${years}</td>
-        <td>${e.gpa ? e.gpa.toFixed(2) : '—'}</td>
+        <td>${e.gpa ? parseFloat(e.gpa).toFixed(2) : '—'}</td>
         <td>
           <div class="flex gap-2">
             <button class="btn btn-ghost btn-sm" onclick="editEducation(${e.id})">Edit</button>

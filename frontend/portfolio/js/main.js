@@ -653,6 +653,22 @@ async function loadExperiences() {
 let allProjects   = [];
 let currentFilter = 'All';
 
+/**
+ * Parse a project's category field into an array of individual tags.
+ * Supports both "/" and "," as separators.
+ * e.g. "Tech/AI/Data" → ["Tech","AI","Data"]
+ *      "Finance, HR"   → ["Finance","HR"]
+ */
+function parseCats(catStr) {
+  if (!catStr) return [];
+  return catStr.split(/[/,]/).map(s => s.trim()).filter(Boolean);
+}
+
+/** Returns true if project belongs to given category tag */
+function projMatchesCat(p, cat) {
+  return parseCats(p.category).some(c => c.toLowerCase() === cat.toLowerCase());
+}
+
 async function loadProjects() {
   allProjects = await fetchJson('/projects') || [];
   hide('projectsLoading');
@@ -666,8 +682,10 @@ function rebuildProjectTabs() {
   const filterEl = document.getElementById('projectsFilter');
   if (!filterEl || !allProjects.length) return;
 
-  // Get unique categories preserving insertion order
-  const cats = [...new Set(allProjects.map(p => p.category).filter(Boolean))];
+  // Collect all unique category tokens across all projects
+  const catSet = new Set();
+  allProjects.forEach(p => parseCats(p.category).forEach(c => catSet.add(c)));
+  const cats = [...catSet];
   const allLabel = t('projects.all');
 
   // Normalize current filter when language changes
@@ -683,9 +701,12 @@ function rebuildProjectTabs() {
       onclick="filterProjects('${escHtml(cat)}', this)">
       ${escHtml(cat)}
     </button>`).join('');
+
+  // Update scroll arrow visibility
+  _updateTabArrows();
 }
 
-function filterProjects(category, btn) {
+function filterProjects(category, _btn) {
   currentFilter = category;
   document.querySelectorAll('.proj-tab').forEach(b => {
     b.classList.toggle('active', b.dataset.cat === category);
@@ -694,9 +715,37 @@ function filterProjects(category, btn) {
   const allLabel = t('projects.all');
   const filtered = (category === allLabel)
     ? allProjects
-    : allProjects.filter(p => p.category === category);
+    : allProjects.filter(p => projMatchesCat(p, category));
   renderProjects(filtered);
+
+  // Scroll active tab into view
+  const activeTab = document.querySelector('.proj-tab.active');
+  if (activeTab) activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
+
+// Arrow-scroll for category tabs
+function _updateTabArrows() {
+  const wrap = document.querySelector('.proj-tabs-wrap');
+  const prev = document.getElementById('projTabPrev');
+  const next = document.getElementById('projTabNext');
+  if (!wrap || !prev || !next) return;
+  const canScrollLeft  = wrap.scrollLeft > 2;
+  const canScrollRight = wrap.scrollLeft < wrap.scrollWidth - wrap.clientWidth - 2;
+  prev.style.opacity = canScrollLeft  ? '1' : '0.3';
+  prev.style.pointerEvents = canScrollLeft  ? 'auto' : 'none';
+  next.style.opacity = canScrollRight ? '1' : '0.3';
+  next.style.pointerEvents = canScrollRight ? 'auto' : 'none';
+}
+
+(function initTabArrows() {
+  const wrap = document.querySelector('.proj-tabs-wrap');
+  if (!wrap) return;
+  wrap.addEventListener('scroll', _updateTabArrows, { passive: true });
+  const prev = document.getElementById('projTabPrev');
+  const next = document.getElementById('projTabNext');
+  if (prev) prev.addEventListener('click', () => { wrap.scrollBy({ left: -160, behavior: 'smooth' }); });
+  if (next) next.addEventListener('click', () => { wrap.scrollBy({ left:  160, behavior: 'smooth' }); });
+})();
 
 function renderProjects(projects) {
   const grid  = document.getElementById('projectsGrid');
@@ -745,7 +794,7 @@ function renderProjects(projects) {
           <div class="project-hover-links">${hoverLinks}</div>
         </div>
         <div class="project-body">
-          <div class="project-category">${escHtml(p.category || 'Project')}</div>
+          <div class="project-category">${parseCats(p.category || 'Project').map(c => escHtml(c)).join(' · ')}</div>
           <h3 class="project-title">${escHtml(projTitle)}</h3>
           <p class="project-desc">${escHtml(projShort)}</p>
           ${metrics.length ? `<div class="project-metrics">${metrics.map(m => `<span class="project-metric">${escHtml(m)}</span>`).join('')}</div>` : ''}
@@ -988,12 +1037,13 @@ async function loadCertificates() {
     }
 
     // Search across all projects regardless of active tab
+    // Also searches across expanded category tokens (e.g. "AI" matches "Tech/AI/Data")
     const matched = allProjects.filter(p => {
       const title = (loc('title', p) + ' ' + (p.title || '')).toLowerCase();
       const tech  = (p.tech_stack || '').toLowerCase();
       const desc  = (loc('description', p) + ' ' + loc('short_desc', p)).toLowerCase();
-      const cat   = (p.category || '').toLowerCase();
-      return title.includes(q) || tech.includes(q) || desc.includes(q) || cat.includes(q);
+      const cats  = parseCats(p.category).join(' ').toLowerCase();
+      return title.includes(q) || tech.includes(q) || desc.includes(q) || cats.includes(q);
     });
 
     renderProjects(matched);

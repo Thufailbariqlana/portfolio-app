@@ -17,6 +17,9 @@ router.post('/', protect, uploadProjectImage, ctrl.create);
 // PUT /api/projects/:id (upload field 'image')
 router.put('/:id', protect, uploadProjectImage, ctrl.update);
 
+// DELETE /api/projects/:id/image — remove image_url only (no record delete)
+router.delete('/:id/image', protect, ctrl.removeImage);
+
 // DELETE /api/projects/:id
 router.delete('/:id', protect, ctrl.remove);
 

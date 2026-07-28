@@ -203,8 +203,16 @@
                placeholder="Search projects…" autocomplete="off"/>
         <button class="proj-search-clear hidden" id="projectSearchClear" aria-label="Clear search">✕</button>
       </div>
-      <div class="proj-tabs-wrap">
-        <div class="proj-tabs" id="projectsFilter" role="tablist"></div>
+      <div class="proj-tabs-row">
+        <button class="proj-tab-arrow" id="projTabPrev" aria-label="Scroll tabs left">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="proj-tabs-wrap">
+          <div class="proj-tabs" id="projectsFilter" role="tablist"></div>
+        </div>
+        <button class="proj-tab-arrow" id="projTabNext" aria-label="Scroll tabs right">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
     </div>
     <div id="projectsLoading" class="loading-wrap">

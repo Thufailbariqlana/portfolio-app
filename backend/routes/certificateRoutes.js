@@ -20,6 +20,8 @@ router.get('/', safeMiddleware(ctrl.getAll, 'ctrl.getAll'));
 router.get('/:id', safeMiddleware(ctrl.getOne, 'ctrl.getOne'));
 router.post('/', protectMW, uploadCertImageMW, safeMiddleware(ctrl.create, 'ctrl.create'));
 router.put('/:id', protectMW, uploadCertImageMW, safeMiddleware(ctrl.update, 'ctrl.update'));
+// DELETE /:id/image — clear image_url only
+router.delete('/:id/image', protectMW, safeMiddleware(ctrl.removeImage, 'ctrl.removeImage'));
 router.delete('/:id', protectMW, safeMiddleware(ctrl.remove, 'ctrl.remove'));
 
 module.exports = router;
