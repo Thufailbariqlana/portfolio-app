@@ -92,7 +92,8 @@ async function saveCertificate() {
   if (imgFile) fd.append('image', imgFile);
 
   if (!fd.get('name') || !fd.get('issuer') || !fd.get('issue_date')) {
-    return alert('Name, Issuer, and Issue Date are required.');
+    showInlineAlert('certAlert', 'Name, Issuer, and Issue Date are required.');
+    return;
   }
 
   setBtnLoading('certSaveBtn', true, 'Save');
@@ -108,7 +109,7 @@ async function saveCertificate() {
     closeModal('certModal');
     loadCertificates();
   } else {
-    alert(r.data.message || 'Failed to save certificate.');
+    showInlineAlert('certAlert', r.data.message || 'Failed to save certificate.');
   }
 }
 
@@ -126,7 +127,7 @@ async function removeCertImage() {
     if (imgActions) imgActions.style.display = 'none';
     showInlineAlert('certAlert', 'Image removed.', 'success');
   } else {
-    alert(r.data.message || 'Failed to remove image.');
+    showInlineAlert('certAlert', r.data.message || 'Failed to remove image.');
   }
 }
 

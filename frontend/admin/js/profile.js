@@ -81,6 +81,7 @@ async function saveProfile() {
 
   if (r.ok) {
     showInlineAlert('profileAlert', 'Profile updated successfully!', 'success');
+    showAdminSaved();
   } else {
     showInlineAlert('profileAlert', r.data.message || 'Failed to update profile.');
   }

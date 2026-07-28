@@ -78,7 +78,8 @@ async function saveEducation() {
   };
 
   if (!payload.institution || !payload.degree || !payload.start_year) {
-    return alert('Institution, Degree, and Start Year are required.');
+    showInlineAlert('eduAlert', 'Institution, Degree, and Start Year are required.');
+    return;
   }
 
   setBtnLoading('eduSaveBtn', true, 'Save');
@@ -94,7 +95,7 @@ async function saveEducation() {
     closeModal('eduModal');
     loadEducation();
   } else {
-    alert(r.data.message || 'Failed to save education.');
+    showInlineAlert('eduAlert', r.data.message || 'Failed to save education.');
   }
 }
 

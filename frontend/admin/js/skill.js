@@ -71,7 +71,8 @@ async function saveSkill() {
   };
 
   if (!payload.name) {
-    return alert('Skill name is required.');
+    showInlineAlert('skillAlert', 'Skill name is required.');
+    return;
   }
 
   setBtnLoading('skillSaveBtn', true, 'Save');
@@ -87,7 +88,7 @@ async function saveSkill() {
     closeModal('skillModal');
     loadSkills();
   } else {
-    alert(r.data.message || 'Failed to save skill.');
+    showInlineAlert('skillAlert', r.data.message || 'Failed to save skill.');
   }
 }
 

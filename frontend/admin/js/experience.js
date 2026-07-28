@@ -80,7 +80,8 @@ async function saveExperience() {
   };
 
   if (!payload.company || !payload.position || !payload.start_date) {
-    return alert('Company, Position, and Start Date are required.');
+    showInlineAlert('expAlert', 'Company, Position, and Start Date are required.');
+    return;
   }
 
   setBtnLoading('expSaveBtn', true, 'Save');
@@ -96,7 +97,7 @@ async function saveExperience() {
     closeModal('expModal');
     loadExperiences();
   } else {
-    alert(r.data.message || 'Failed to save experience.');
+    showInlineAlert('expAlert', r.data.message || 'Failed to save experience.');
   }
 }
 

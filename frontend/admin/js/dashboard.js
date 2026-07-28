@@ -106,7 +106,12 @@ function navigateTo(section) {
 }
 
 document.querySelectorAll('.nav-item[data-section]').forEach(item => {
-  item.addEventListener('click', () => navigateTo(item.dataset.section));
+  item.addEventListener('click', () => {
+    navigateTo(item.dataset.section);
+    // Also close mobile sidebar when a nav item is tapped
+    const sb = document.getElementById('sidebar');
+    if (sb) sb.classList.remove('open');
+  });
 });
 
 // ── Overview loader ───────────────────────────────────────────────────────────
@@ -203,6 +208,18 @@ async function changePassword() {
   } else {
     showInlineAlert('securityAlert', r.data.message || 'Failed to update password.');
   }
+}
+
+// ── Admin saved flash ─────────────────────────────────────────────────────────
+function showAdminSaved() {
+  const el = document.getElementById('adminSaveStatus');
+  if (!el) return;
+  el.style.display = '';
+  el.style.opacity = '1';
+  setTimeout(() => {
+    el.style.opacity = '0';
+    setTimeout(() => { el.style.display = 'none'; }, 350);
+  }, 2200);
 }
 
 // ── Utility ───────────────────────────────────────────────────────────────────

@@ -700,6 +700,32 @@ footer { padding: 2.5rem 1.5rem; border-top: 1px solid var(--border); text-align
 .back-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .back-top:hover { border-color: var(--accent); color: var(--accent); background: rgba(var(--accent-rgb),.08); transform: translateY(-2px); }
 
+/* ── Section number accent ──────────────────────────────────── */
+.section-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+  background: rgba(var(--accent-rgb),.12); color: var(--accent);
+  font-size: .72rem; font-weight: 800; letter-spacing: -.01em;
+}
+
+/* ── Toast notifications ────────────────────────────────────── */
+.toast-wrap {
+  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+  z-index: 300; display: flex; flex-direction: column; gap: .5rem;
+  align-items: center; pointer-events: none;
+}
+.toast {
+  background: var(--surface); border: 1px solid var(--border-2);
+  border-radius: 10px; padding: .65rem 1.25rem;
+  font-size: .85rem; font-weight: 500; color: var(--text-h);
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  animation: toastIn .25s ease both;
+  pointer-events: auto;
+}
+.toast.success { border-color: rgba(34,197,94,.4); color: #4ade80; background: rgba(34,197,94,.08); }
+.toast.error   { border-color: rgba(239,68,68,.4);  color: #f87171; background: rgba(239,68,68,.08); }
+@keyframes toastIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
 /* ── Animations ─────────────────────────────────────────────── */
 .fade-in { opacity: 0; transform: translateY(22px); transition: opacity .65s ease, transform .65s ease; }
 .fade-in.visible { opacity: 1; transform: translateY(0); }
@@ -724,6 +750,7 @@ footer { padding: 2.5rem 1.5rem; border-top: 1px solid var(--border); text-align
   .contact-grid { grid-template-columns: 1fr; }
   .nav-links { gap: 1.1rem; }
   .hire-card { padding: 2.25rem 1.5rem; }
+  .proj-controls { gap: .65rem; }
 }
 @media (max-width: 680px) {
   .nav-links { display: none; }
@@ -733,7 +760,13 @@ footer { padding: 2.5rem 1.5rem; border-top: 1px solid var(--border); text-align
   .skills-grid { grid-template-columns: 1fr 1fr; }
   .edu-grid, .certs-grid { grid-template-columns: 1fr; }
   .proj-search-wrap { max-width: 100%; }
+  /* On mobile, stack search above the tab row */
+  .proj-controls { flex-direction: column; }
+  .proj-tabs-row { width: 100%; }
+  .proj-tabs-wrap { min-width: 0; }
 }
 @media (max-width: 400px) {
   .skills-grid { grid-template-columns: 1fr; }
+  .hero-stats { gap: 1rem; }
+  .hero-stat-val { font-size: 1.35rem; }
 }

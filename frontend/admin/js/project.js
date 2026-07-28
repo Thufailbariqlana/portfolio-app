@@ -112,7 +112,8 @@ async function saveProject() {
   if (imgFile) fd.append('image', imgFile);
 
   if (!fd.get('title')) {
-    return alert('Title is required.');
+    showInlineAlert('projAlert', 'Title is required.');
+    return;
   }
 
   setBtnLoading('projSaveBtn', true, 'Save');
@@ -128,7 +129,7 @@ async function saveProject() {
     closeModal('projModal');
     loadProjects();
   } else {
-    alert(r.data.message || 'Failed to save project.');
+    showInlineAlert('projAlert', r.data.message || 'Failed to save project.');
   }
 }
 
@@ -146,7 +147,7 @@ async function removeProjectImage() {
     if (imgActions) imgActions.style.display = 'none';
     showInlineAlert('projAlert', 'Image removed.', 'success');
   } else {
-    alert(r.data.message || 'Failed to remove image.');
+    showInlineAlert('projAlert', r.data.message || 'Failed to remove image.');
   }
 }
 

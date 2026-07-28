@@ -70,6 +70,15 @@ const i18n = {
     'exp.present':      'Present',
     'exp.location':     'Location',
     'no.data':          'No data added yet.',
+    // About info labels
+    'about.location':   'Location',
+    'about.email':      'Email',
+    'about.phone':      'Phone',
+    'about.website':    'Website',
+    'about.experience': 'Experience',
+    'about.years':      'years',
+    // Hero greeting
+    'hero.greeting':    "Hi, I'm",
   },
   id: {
     'nav.about':        'Tentang',
@@ -121,6 +130,15 @@ const i18n = {
     'exp.present':      'Sekarang',
     'exp.location':     'Lokasi',
     'no.data':          'Belum ada data.',
+    // About info labels
+    'about.location':   'Lokasi',
+    'about.email':      'Email',
+    'about.phone':      'Telepon',
+    'about.website':    'Website',
+    'about.experience': 'Pengalaman',
+    'about.years':      'tahun',
+    // Hero greeting
+    'hero.greeting':    'Halo, Saya',
   }
 };
 
@@ -188,6 +206,25 @@ function hide(id) { const el = document.getElementById(id); if (el) el.style.dis
 function setText(id, val) {
   const el = document.getElementById(id);
   if (el) el.textContent = val;
+}
+
+/**
+ * Show a brief toast notification at the bottom of the page.
+ * type: 'success' | 'error' | '' (neutral)
+ */
+function showToast(msg, type = '', duration = 3500) {
+  let wrap = document.getElementById('toastWrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'toastWrap';
+    wrap.className = 'toast-wrap';
+    document.body.appendChild(wrap);
+  }
+  const el = document.createElement('div');
+  el.className = `toast${type ? ' ' + type : ''}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 350); }, duration);
 }
 
 /**
@@ -267,10 +304,12 @@ let _cachedCerts       = null;
     if (_cachedExperiences) rerenderExperiences(_cachedExperiences);
     if (allProjects.length) {
       rebuildProjectTabs();
+      // rebuildProjectTabs() already normalizes currentFilter to new lang's "All" label
+      const allLabel = t('projects.all');
       renderProjects(
-        currentFilter === 'All' || currentFilter === 'Semua' || currentFilter === t('projects.all')
+        currentFilter === allLabel
           ? allProjects
-          : allProjects.filter(p => p.category === currentFilter)
+          : allProjects.filter(p => projMatchesCat(p, currentFilter))
       );
     }
     if (_cachedSkills)    rerenderSkills(_cachedSkills);
@@ -425,14 +464,60 @@ function linkIcon()  { return `<svg width="17" height="17" fill="none" stroke="c
 // Extracted so it can be called again on language toggle
 function rerenderProfile(p) {
   if (!p) return;
+  // Re-render hero greeting with correct language
+  const heroNameEl = document.getElementById('heroName');
+  if (heroNameEl) {
+    heroNameEl.innerHTML = `${t('hero.greeting')} <span class="accent">${escHtml(p.full_name || 'Your Name')}</span>`;
+  }
   // Typing animation: restart with new language roles
-  const title    = loc('title', p);
-  const extra    = currentLang === 'id'
+  const title = loc('title', p);
+  const extra = currentLang === 'id'
     ? ['Pengembang Web', 'Pemecah Masalah', 'Pembuat Solusi']
     : ['Web Developer', 'Problem Solver', 'Solution Builder'];
   startTyping([title, ...extra]);
   setText('heroBio',   loc('bio', p));
   setText('aboutBio',  loc('bio', p));
+  // Re-render about info labels (they contain translated strings)
+  if (_cachedProfile) {
+    const infoList = document.getElementById('aboutInfoList');
+    if (infoList) {
+      const infos = [
+        { icon: locIcon(),   label: t('about.location'),   val: p.location },
+        { icon: mailIcon(),  label: t('about.email'),       val: p.email,   href: `mailto:${p.email}` },
+        { icon: phoneIcon(), label: t('about.phone'),       val: p.phone },
+        { icon: linkIcon(),  label: t('about.website'),     val: p.website, href: safeUrl(p.website) },
+        { icon: expIcon(),   label: t('about.experience'),  val: p.years_of_exp ? `${p.years_of_exp} ${t('about.years')}` : '' },
+      ].filter(i => i.val);
+      infoList.innerHTML = infos.map(i => `
+        <div class="about-info-item">
+          <div class="about-info-icon">${i.icon}</div>
+          <div>
+            <div class="about-info-label">${escHtml(i.label)}</div>
+            <div class="about-info-val">
+              ${i.href ? `<a href="${escHtml(i.href)}" target="_blank">${escHtml(i.val)}</a>` : escHtml(i.val)}
+            </div>
+          </div>
+        </div>`).join('');
+    }
+    const contactInfoList = document.getElementById('contactInfoList');
+    if (contactInfoList) {
+      const contacts = [
+        { icon: mailIcon(),  label: t('about.email'),    val: p.email,    href: `mailto:${p.email}` },
+        { icon: phoneIcon(), label: t('about.phone'),    val: p.phone,    href: `tel:${p.phone}` },
+        { icon: locIcon(),   label: t('about.location'), val: p.location },
+      ].filter(c => c.val);
+      contactInfoList.innerHTML = contacts.map(c => `
+        <div class="contact-info-item">
+          <div class="contact-info-icon">${c.icon}</div>
+          <div>
+            <div class="contact-info-label">${escHtml(c.label)}</div>
+            <div class="contact-info-val">
+              ${c.href ? `<a href="${escHtml(c.href)}">${escHtml(c.val)}</a>` : escHtml(c.val)}
+            </div>
+          </div>
+        </div>`).join('');
+    }
+  }
 }
 
 async function loadProfile() {
@@ -475,11 +560,11 @@ async function loadProfile() {
   }
 
   // ── Hero ───────────────────────────────────────────────────────
-  const firstName = (p.full_name || '').split(' ')[0];
   const heroNameEl = document.getElementById('heroName');
   if (heroNameEl) {
-    heroNameEl.innerHTML = `Hi, I'm <span class="accent">${escHtml(p.full_name || 'Your Name')}</span>`;
+    heroNameEl.innerHTML = `${t('hero.greeting')} <span class="accent">${escHtml(p.full_name || 'Your Name')}</span>`;
   }
+  const firstName = (p.full_name || '').split(' ')[0];
   // Start typing animation with title + extra roles
   const titleText = loc('title', p);
   const extraRoles = currentLang === 'id'
@@ -539,11 +624,11 @@ async function loadProfile() {
   const infoList = document.getElementById('aboutInfoList');
   if (infoList) {
     const infos = [
-      { icon: locIcon(),   label: 'Location',   val: p.location },
-      { icon: mailIcon(),  label: 'Email',       val: p.email,   href: `mailto:${p.email}` },
-      { icon: phoneIcon(), label: 'Phone',       val: p.phone },
-      { icon: linkIcon(),  label: 'Website',     val: p.website, href: safeUrl(p.website) },
-      { icon: expIcon(),   label: 'Experience',  val: p.years_of_exp ? `${p.years_of_exp} years` : '' },
+      { icon: locIcon(),   label: t('about.location'),   val: p.location },
+      { icon: mailIcon(),  label: t('about.email'),       val: p.email,   href: `mailto:${p.email}` },
+      { icon: phoneIcon(), label: t('about.phone'),       val: p.phone },
+      { icon: linkIcon(),  label: t('about.website'),     val: p.website, href: safeUrl(p.website) },
+      { icon: expIcon(),   label: t('about.experience'),  val: p.years_of_exp ? `${p.years_of_exp} ${t('about.years')}` : '' },
     ].filter(i => i.val);
 
     infoList.innerHTML = infos.map(i => `
@@ -573,9 +658,9 @@ async function loadProfile() {
   const contactInfoList = document.getElementById('contactInfoList');
   if (contactInfoList) {
     const contacts = [
-      { icon: mailIcon(),  label: 'Email',    val: p.email,    href: `mailto:${p.email}` },
-      { icon: phoneIcon(), label: 'Phone',    val: p.phone,    href: `tel:${p.phone}` },
-      { icon: locIcon(),   label: 'Location', val: p.location },
+      { icon: mailIcon(),  label: t('about.email'),    val: p.email,    href: `mailto:${p.email}` },
+      { icon: phoneIcon(), label: t('about.phone'),    val: p.phone,    href: `tel:${p.phone}` },
+      { icon: locIcon(),   label: t('about.location'), val: p.location },
     ].filter(c => c.val);
     contactInfoList.innerHTML = contacts.map(c => `
       <div class="contact-info-item">
@@ -1006,11 +1091,11 @@ async function loadCertificates() {
         success?.classList.remove('hidden');
         setTimeout(() => success?.classList.add('hidden'), 6000);
       } else {
-        const json = await res.json();
-        alert(json.message || 'Failed to send message.');
+        const json = await res.json().catch(() => ({}));
+        showToast(json.message || 'Failed to send message.', 'error');
       }
     } catch {
-      alert('Cannot connect to server. Please try again.');
+      showToast('Cannot connect to server. Please try again.', 'error');
     } finally {
       btn.disabled = false;
       if (btnText) btnText.textContent = t('contact.send');
