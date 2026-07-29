@@ -333,7 +333,8 @@ let _cachedCerts       = null;
 // ── Typing Animation ──────────────────────────────────────────────
 // _typingRoles is populated by loadProfile() from the DB title field.
 // Falls back to a generic list if profile hasn't loaded yet.
-let _typingRoles = ['Developer', 'Designer', 'Problem Solver'];
+// Default fallback sebelum data DB di-load
+let _typingRoles = ['Systems & Operations Specialist', 'QA & QC Specialist', 'Mechatronics Engineer'];
 let _typingIdx   = 0;
 let _charIdx     = 0;
 let _typingDir   = 'type'; // 'type' | 'erase'
@@ -472,8 +473,8 @@ function rerenderProfile(p) {
   // Typing animation: restart with new language roles
   const title = loc('title', p);
   const extra = currentLang === 'id'
-    ? ['Pengembang Web', 'Pemecah Masalah', 'Pembuat Solusi']
-    : ['Web Developer', 'Problem Solver', 'Solution Builder'];
+    ? ['Operations Engineer', 'QA & QC Specialist', 'Technical Human Capital', 'Operational Auditor']
+    : ['Operations Engineer', 'QA & QC Specialist', 'Technical Human Capital', 'Operational Auditor'];
   startTyping([title, ...extra]);
   setText('heroBio',   loc('bio', p));
   setText('aboutBio',  loc('bio', p));
@@ -568,8 +569,8 @@ async function loadProfile() {
   // Start typing animation with title + extra roles
   const titleText = loc('title', p);
   const extraRoles = currentLang === 'id'
-    ? ['Pengembang Web', 'Pemecah Masalah', 'Pembuat Solusi']
-    : ['Web Developer', 'Problem Solver', 'Solution Builder'];
+    ? ['Operations Engineer', 'QA & QC Specialist', 'Technical Human Capital', 'Operational Auditor']
+    : ['Operations Engineer', 'QA & QC Specialist', 'Technical Human Capital', 'Operational Auditor'];
   startTyping([titleText, ...extraRoles]);
   setText('heroBio', loc('bio', p));
 
